@@ -51,8 +51,8 @@ No momento estou fazendo com o arquivo *teste.txt*, que está aí em cima. Mas o
 Ah, tem muitas coisas ainda a serem mexidas. Segue a lista:
 
 #### No script updatedbmsx.sh:
-- - Ele tem que garantir que os arquivos que não começam com uma letra, sejam jogados em um arquivo, tipo 0.txt, por exemplo. 
-- - O script deverá também criar a pasta na partição correspondente ao drive A do cartão/pendrive a ser usado no MSX, e acrescentar o SET LOCATEDB=a:\UTILS\LOCATE\DB no AUTOEXEC.BAT.
+- - ~~Ele tem que garantir que os arquivos que não começam com uma letra, sejam jogados em um arquivo, tipo 0.txt, por exemplo.~~ 
+- - ~~O script deverá também criar a pasta na partição correspondente ao drive A do cartão/pendrive a ser usado no MSX, e acrescentar o SET LOCATEDB=a:\UTILS\LOCATE\DB no AUTOEXEC.BAT.~~ Essa funcionalidade, a propósito, está feita mas precisa de testes.
 
 #### No utilitário locate:
 - - Ele também tem que ser capaz de fazer a busca por arquivos que comecem com algum caracter que não é uma letra, e buscar no arquivo correspondente.
