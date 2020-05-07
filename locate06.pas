@@ -16,7 +16,8 @@
 
 program locate06;
 
-{$i d:dvram.inc}
+{$i d:wrtvram.inc}
+{$i d:fastwrit.inc}
     
 const
     tamanhonomearquivo = 40;
@@ -54,7 +55,6 @@ var
     parametro: byte;
     caractere: char;
 (**)
-    handle: TOutputHandle;
 
 procedure buscabinarianomearquivo (vetorhashes: registervector; hash: integer; var posicao, tentativas: integer);
 var
@@ -254,47 +254,45 @@ end;
 
 procedure helpdocomando;
 begin
-    OpenDirectTextMode ( handle );
-    writeln(' Uso: locate <padrao> <parametros>.');
-    writeln(' Faz buscas em um banco de dados criado com a lista de arquivos do dispositivo.');
-    writeln;
-    writeln(' Padrao: Padrao a ser buscado no banco de dados.');
-    writeln;
-    writeln(' Parametros: ');
-    writeln(' /a ou /change    - Muda para o diretorio onde o arquivo esta.');
-    writeln(' /c ou /count     - Mostra quantas entradas foram encontradas.');
-    writeln(' /h ou /help      - Traz este texto de ajuda e sai.');
-    writeln(' /l n ou /limit n - Limita a saida para n entradas.');
-    writeln(' /p ou /prolix    - Mostra tudo o que o comando está fazendo.');
-    writeln(' /s ou /stats     - Exibe estatisticas do banco de dados.');
-    writeln(' /v ou /version   - Exibe a versão do comando e sai.');
-    writeln;
-    CloseDirectTextMode ( handle );
+    fastwriteln(' Uso: locate <padrao> <parametros>.');
+    fastwriteln(' Faz buscas em um banco de dados criado com a lista de arquivos do dispositivo.');
+    fastwriteln(' ');
+    fastwriteln(' Padrao: Padrao a ser buscado no banco de dados.');
+    fastwriteln(' ');
+    fastwriteln(' Parametros: ');
+    fastwriteln(' /a ou /change    - Muda para o diretorio onde o arquivo esta.');
+    fastwriteln(' /c ou /count     - Mostra quantas entradas foram encontradas.');
+    fastwriteln(' /h ou /help      - Traz este texto de ajuda e sai.');
+    fastwriteln(' /l n ou /limit n - Limita a saida para n entradas.');
+    fastwriteln(' /p ou /prolix    - Mostra tudo o que o comando esta fazendo.');
+    fastwriteln(' /s ou /stats     - Exibe estatisticas do banco de dados.');
+    fastwriteln(' /v ou /version   - Exibe a versao do comando e sai.');
+    fastwriteln(' ');
     halt;
 end;
 
 procedure versaodocomando;
 begin
-    writeln('locate versao 0.1'); 
-    writeln('Copyright (c) 2020 Brazilian MSX Crew.');
-    writeln('Alguns direitos reservados.');
-    writeln('Este software ainda nao se decidiu se sera distribuido sobre a GPL v. 2 ou nao.');
-    writeln;
-    writeln('Este programa e fornecido sem garantias na medida do permitido pela lei.');
-    writeln;
-    writeln('Notas de versao: ');
-    writeln('No momento, esse comando apenas faz busca por nomes exatos de arquivos');
-    writeln('no banco de dados. Ele ainda nao faz buscas em nomes incompletos ou em');
-    writeln('diretorios. Ele tambem so faz uso de um parametro por vez.');
-    writeln('No futuro, teremos o uso de dois ou mais parametros, faremos a busca em');
-    writeln('nomes incompletos, diretorios e sera possivel executar o comando CD para');
-    writeln('o diretorio onde o arquivo esta.');
-    writeln;
-    writeln('Configuracao: ');
-    writeln('A principio o banco de dados do locate esta localizado em a:\UTILS\LOCATE\DB.');
-    writeln('Se quiser trocar o caminho, voce deve alterar a variavel de ambiente LOCALEDB,');
-    writeln('no MSX-DOS. Faca essas alteracoes no AUTOEXEC.BAT, usando o comando SET.');
-    writeln;
+    fastwriteln('locate versao 0.1'); 
+    fastwriteln('Copyright (c) 2020 Brazilian MSX Crew.');
+    fastwriteln('Alguns direitos reservados.');
+    fastwriteln('Este software ainda nao se decidiu se sera distribuido sobre a GPL v. 2 ou nao.');
+    fastwriteln(' ');
+    fastwriteln('Este programa e fornecido sem garantias na medida do permitido pela lei.');
+    fastwriteln(' ');
+    fastwriteln('Notas de versao: ');
+    fastwriteln('No momento, esse comando apenas faz busca por nomes exatos de arquivos');
+    fastwriteln('no banco de dados. Ele ainda nao faz buscas em nomes incompletos ou em');
+    fastwriteln('diretorios. Ele tambem so faz uso de um parametro por vez.');
+    fastwriteln('No futuro, teremos o uso de dois ou mais parametros, faremos a busca em');
+    fastwriteln('nomes incompletos, diretorios e sera possivel executar o comando CD para');
+    fastwriteln('o diretorio onde o arquivo esta.');
+    fastwriteln(' ');
+    fastwriteln('Configuracao: ');
+    fastwriteln('A principio o banco de dados do locate esta localizado em a:\UTILS\LOCATE\DB.');
+    fastwriteln('Se quiser trocar o caminho, voce deve alterar a variavel de ambiente LOCALEDB,');
+    fastwriteln('no MSX-DOS. Faca essas alteracoes no AUTOEXEC.BAT, usando o comando SET.');
+    fastwriteln(' ');
     halt;
 end;    
 
@@ -307,8 +305,6 @@ BEGIN
     fillchar(temporario2,length(temporario2),byte( ' ' ));
    
     clrscr;
-
-    OpenDirectTextMode (handle );
    
     for b := 1 to 4 do
         entradadocomando[b] := paramstr(b);
@@ -376,10 +372,10 @@ BEGIN
 }
 (* Abre o arquivo, informa números dele e vai pra busca *)
 
-    if caractere = 'P' then writeln('Abre arquivo de registros');
+    if caractere = 'P' then fastwriteln('Abre arquivo de registros');
     abrearquivoregistros(nomearquivoregistros);
     
-    if caractere = 'P' then writeln('Abre arquivo de hashes');
+    if caractere = 'P' then fastwriteln('Abre arquivo de hashes');
     abrearquivohashes(nomearquivohashes);
 
     tamanho:=filesize(arquivoregistros);
@@ -397,7 +393,7 @@ BEGIN
 
 (* Le o arquivo de hashes, pegando todos os numeros de hash e salvando num vetor *)
 
-    if caractere = 'P' then writeln('Le arquivo de hashes');
+    if caractere = 'P' then fastwriteln('Le arquivo de hashes');
     learquivohashes;
 
 (* Pede o nome exato de um arquivo a ser procurado *)
@@ -415,7 +411,7 @@ BEGIN
     
 (* Faz a busca binaria no vetor *)
 
-    if caractere = 'P' then writeln('Faz busca.');
+    if caractere = 'P' then fastwriteln('Faz busca.');
     buscabinarianomearquivo(vetorhashes, hash, posicao, tentativas);
  
 (* Tendo a posicao certa, le o registro e verifica se o nome bate. *)
@@ -461,17 +457,18 @@ BEGIN
                     writeln('Posicao: ',j,' tentativas: ',tentativas,
                     ' Nome do arquivo: ',ficha.nomearquivo,' Diretorio: ',ficha.diretorio)
                 else
-                    writeln(ficha.diretorio,'\',ficha.nomearquivo);
+                begin
+					vetorbuffer:=concat(ficha.diretorio,'\',ficha.nomearquivo);
+                    fastwriteln(vetorbuffer);
+                end;
             end;
         end;
     end
         else
-            writeln('Arquivo nao encontrado.');
+            fastwriteln('Arquivo nao encontrado.');
 
 (* Fecha o arquivo *)
     if caractere = 'P' then
-        writeln('Fecha arquivo.');
+        fastwriteln('Fecha arquivo.');
     fechaarquivoregistros;
-    
-    CloseDirectTextMode ( handle );
 END.

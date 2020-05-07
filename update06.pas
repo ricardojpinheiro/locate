@@ -188,7 +188,7 @@ begin
 	blockwrite(arquivohashes,vetorbuffer,1,retorno);
 {	
 	writeln('b: ',b,' modulo: ',modulo,' maximo: ',maximo);
- 	writeln(vetorbuffer);
+  	writeln(vetorbuffer);
 }	
 { Joga num arquivo separado o hash }	
 { Como o arquivo trabalha com registros de 128 bytes (arquivo sem tipo), 
@@ -201,8 +201,7 @@ begin
 	i := 1;
 	j := 1;
 	hashemtexto := ' ';
-	while  j <= maximo do
-	begin
+	repeat 
 		fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
 		k := 1;
 		while (k <= porlinha) do
@@ -227,13 +226,13 @@ begin
 			j := j + contador;
 			k := k + 1;
 		end;
-{
-		writeln('i: ',i,' j: ',j,' vetorbuffer: ',vetorbuffer);
-}
 		seek(arquivohashes,i);
 		blockwrite(arquivohashes,vetorbuffer,1,retorno);
 		i := i + 1;
-	end;
+{
+		writeln('maximo: ',maximo,' i: ',i,' j: ',j,' vetorbuffer: ',vetorbuffer);
+}
+	until j >= maximo;
 end;
 
 procedure quicksort(var vetor: registervector; comeco, fim: integer);
