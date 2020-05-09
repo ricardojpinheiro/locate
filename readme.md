@@ -43,7 +43,7 @@ Nota: A função riscada é que ainda não está implementada.
 #### Limitações do locate.
 No momento, esse comando apenas faz busca por nomes exatos de arquivos no banco de dados. Ele ainda não faz buscas em nomes incompletos ou em diretórios. Ele também só faz uso de um parâmetro por vez, mas o parâmetro pode estar fora de ordem.
 #### Desempenho.
-Fiz uma medição com o OpenMSX, em um MSX 2 padrão, com MSX-DOS 2 e acesso a disco. Usei um arquivo com 1000 registros, mais o arquivo de hashes dentro do mesmo diretório. Procurei por um nome de arquivo que aparecia pelo menos 8 vezes naquele arquivo. No último teste (marcado com o cronômetro do meu relógio)  o MSX foi capaz de entregar o resultado em 7,5 segundos. Mas tem ainda como ganhar algum tempo.
+Fiz uma medição com o OpenMSX, em um MSX 2 padrão, com MSX-DOS 2 e acesso a disco. Usei um arquivo com 1000 registros, mais o arquivo de hashes dentro do mesmo diretório. Procurei por um nome de arquivo que aparecia pelo menos 8 vezes naquele arquivo. No último teste (marcado com o cronômetro do meu relógio)  o MSX foi capaz de entregar o resultado em 7,3 segundos. Mas tem ainda como ganhar algum tempo.
 ### Testes.
 No momento estou fazendo com o arquivo *teste.txt*, que está aí em cima. Mas o teste definitivo será feito com a minha imagem de cartão SD, que contém no total 77.803 arquivos, espalhados em 4 partições.
 
@@ -51,12 +51,12 @@ No momento estou fazendo com o arquivo *teste.txt*, que está aí em cima. Mas o
 Ah, tem muitas coisas ainda a serem mexidas. Segue a lista:
 
 #### No script updatedbmsx.sh:
-- - Ele tem que garantir que os arquivos que não começam com uma letra, sejam jogados em um arquivo, tipo 0.txt, por exemplo. 
-- - O script deverá também criar a pasta na partição correspondente ao drive A do cartão/pendrive a ser usado no MSX, e acrescentar o SET LOCATEDB=a:\UTILS\LOCATE\DB no AUTOEXEC.BAT.
+- - ~~Ele tem que garantir que os arquivos que não começam com uma letra, sejam jogados em um arquivo, tipo 0.txt, por exemplo.~~ 
+- - ~~O script deverá também criar a pasta na partição correspondente ao drive A do cartão/pendrive a ser usado no MSX, e acrescentar o SET LOCATEDB=a:\UTILS\LOCATE\DB no AUTOEXEC.BAT.~~ Essa funcionalidade, a propósito, está feita mas precisa de testes.
 
 #### No utilitário locate:
-- - Ele também tem que ser capaz de fazer a busca por arquivos que comecem com algum caracter que não é uma letra, e buscar no arquivo correspondente.
-- - Usar rotinas para impressão mais rápida na tela. O write/writeln do TP3 usa a BDOS, então imprime na tela, mas é lento. Usando rotinas que estão disponíveis nas bibliotecas dos irmãos Lammassaari, eu obtive um ganho de desempenho de 15 a 20% na saída.
+- - ~~Ele também tem que ser capaz de fazer a busca por arquivos que comecem com algum caracter que não é uma letra, e buscar no arquivo correspondente.~~
+- - ~~Usar rotinas para impressão mais rápida na tela. O write/writeln do TP3 usa a BDOS, então imprime na tela, mas é lento. Usando rotinas que estão disponíveis nas bibliotecas dos irmãos Lammassaari, eu obtive um ganho de desempenho de 15 a 20% na saída.~~
 - - Usar as rotinas disponibilizadas pelo [PopolonY2K](https://sourceforge.net/projects/oldskooltech/) para facilitar a abertura de arquivos em diretórios que não são os seus, já que o blockread tem problemas com isto.
 - - Quero que ele leia a variável de ambiente, setada no MSX-DOS 2 para colocar o caminho para o banco de dados. A variável de ambiente será a LOCALEDB, e a entrada será, a princípio, a:\UTILS\LOCATE\DB.
 - - Parâmetro riscado lá em cima - será possível fazer com que ele execute o comando cd para já colocar o prompt no diretório onde aquele arquivo está.

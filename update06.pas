@@ -167,25 +167,10 @@ procedure geraarquivohashes (maximo: integer);
 var
 	i, j, k, hash, proximohash, contador, retorno: integer;
 	vetorbuffer: buffervector;
-	hashemtexto, temporario1, temporario2, temporario3: string[6];
+	hashemtexto, temporario1, temporario2, temporario3, temporario4: string[6];
 	
 begin
 { Joga num arquivo separado o hash }
-{ Grava no arquivo de hashes, na posicao 0, o valor de b e o modulo. }
-	temporario1:=' ';
-	fillchar(temporario1,length(temporario1),byte( ' ' ));
-	temporario2:=' ';
-	fillchar(temporario2,length(temporario2),byte( ' ' ));
-	temporario3:=' ';
-	fillchar(temporario1,length(temporario3),byte( ' ' ));
-	vetorbuffer:=' ';
-	fillchar(vetorbuffer,length(vetorbuffer),byte( ' ' ));
-	str(b,temporario1);
-	str(modulo,temporario2);
-	str(maximo,temporario3);
-	vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',');
- 	seek(arquivohashes,0);
-	blockwrite(arquivohashes,vetorbuffer,1,retorno);
 {	
 	writeln('b: ',b,' modulo: ',modulo,' maximo: ',maximo);
   	writeln(vetorbuffer);
@@ -229,10 +214,29 @@ begin
 		seek(arquivohashes,i);
 		blockwrite(arquivohashes,vetorbuffer,1,retorno);
 		i := i + 1;
-{
+
 		writeln('maximo: ',maximo,' i: ',i,' j: ',j,' vetorbuffer: ',vetorbuffer);
-}
+
 	until j >= maximo;
+{ Grava no arquivo de hashes, na posicao 0, o valor de b, o modulo, }
+{ o numero maximo de entradas e o numero maximo de registros }
+	temporario1:=' ';
+	fillchar(temporario1,length(temporario1),byte( ' ' ));
+	temporario2:=' ';
+	fillchar(temporario2,length(temporario2),byte( ' ' ));
+	temporario3:=' ';
+	fillchar(temporario1,length(temporario3),byte( ' ' ));
+	temporario4:=' ';
+	fillchar(temporario1,length(temporario4),byte( ' ' ));
+	vetorbuffer:=' ';
+	fillchar(vetorbuffer,length(vetorbuffer),byte( ' ' ));
+	str(b,temporario1);
+	str(modulo,temporario2);
+	str(maximo,temporario3);
+	str(i,temporario4);
+	vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',',temporario4,',');
+ 	seek(arquivohashes,0);
+	blockwrite(arquivohashes,vetorbuffer,1,retorno);
 end;
 
 procedure quicksort(var vetor: registervector; comeco, fim: integer);
