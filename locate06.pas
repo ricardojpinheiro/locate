@@ -23,7 +23,7 @@ const
     tamanhonomearquivo = 40;
     tamanhototalbuffer = 127;
     tamanhodiretorio = 87;
-    max = 8500;
+    max = 8700;
     porlinha = 15;
 
 type
@@ -55,22 +55,22 @@ var
     parametro: byte;
     caractere, primeiraletra: char;
 
-procedure buscabinarianomearquivo (vetorhashes: registervector; hash, fim: integer; var posicao, tentativas: integer);
+procedure buscabinarianomearquivo (hash, fim: integer; var posicao, tentativas: integer);
 var
     comeco, meio: integer;
     encontrou: boolean;
             
 begin
-    comeco:=1;
-    tentativas:=1;
-    fim:=maximo;
-    encontrou:=false;
+    comeco		:=	1;
+    tentativas	:=	1;
+    fim			:=	maximo;
+    encontrou	:=	false;
     while (comeco <= fim) and (encontrou = false) do
     begin
         meio:=(comeco+fim) div 2;
-{
+
         writeln('Comeco: ',comeco,' Meio: ',meio,' fim: ',fim,' hash: ',hash,' Pesquisa: ',vetorhashes[meio]);
-}       
+       
         if (hash = vetorhashes[meio]) then
             encontrou:=true
         else
@@ -123,7 +123,7 @@ var
 begin
     retorno:=0;
     hashemtexto:='';
-    seek(arquivoregistros,posicao-1);
+    seek(arquivoregistros,posicao - 1);
     blockread(arquivoregistros,vetorbuffer,1);
 {
     writeln(vetorbuffer);
@@ -171,12 +171,12 @@ begin
     calculahash := hash;
 end;
 
-procedure learquivohashes(tamanho, maximo: integer);
+procedure learquivohashes(hash, tamanho, maximo: integer);
 var
-    registros, entradas, nalinha, linhas, repeticoes, hash, contador: integer;
+    registros, entradas, nalinha, linhas, repeticoes, contador: integer;
     vetorbuffer: buffervector;
     letra: char;
-    hashemtexto, temporario1, temporario2, temporario3, temporario4: string[6];
+    hashemtexto: string[6];
     
 begin
 (* Le com um blockread e separa, jogando cada hash em uma posicao em um vetor. *)
@@ -186,8 +186,11 @@ begin
     hashemtexto := ' ';
     fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
     fillchar(hashemtexto,6,byte( ' ' ));
-
-	while (entradas < maximo) and (registros < linhas) do
+{
+	writeln('hash: ',hash,' tamanho: ',tamanho,' maximo: ',maximo);
+}
+	entradas := 1;
+	while (entradas <= tamanho) do
     begin
         seek(arquivohashes,registros);
         blockread(arquivohashes,vetorbuffer,1,retorno);
@@ -212,16 +215,17 @@ begin
             begin
                 vetorhashes[entradas + repeticoes] := hash;
                 contador := contador + 1;
-{
+
                 writeln('vetorhashes[',entradas + repeticoes,']=',vetorhashes[entradas + repeticoes]);
-}
+
             end;
-{
-            writeln('Registro: ',i,' entrada no vetor: ',j,' vetorbuffer: ',vetorbuffer);
-}           
+          
             entradas := entradas + contador;
             nalinha := nalinha + 1;
         end;
+{
+		writeln('Registro: ',registros,' entrada no vetor: ',entradas,' vetorbuffer: ',vetorbuffer);
+}
         fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
         registros := registros + 1;
     end;
@@ -352,25 +356,31 @@ BEGIN
     seek(arquivohashes,0);
     blockread(arquivohashes,vetorbuffer,1,retorno);
     
+    writeln('Vetorbuffer: ',vetorbuffer);
+
     fillchar(temporario1,tamanhonomearquivo,byte( ' ' ));
-    temporario1 := copy(vetorbuffer,1,(pos(',',vetorbuffer)-1));
+    temporario1 := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario1,b,retorno);
     delete(vetorbuffer,1,pos(',',vetorbuffer));
     
     fillchar(temporario2,tamanhonomearquivo,byte( ' ' ));
-    temporario2 := copy(vetorbuffer,1,(pos(',',vetorbuffer)-1));
+    temporario2 := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario2,modulo,retorno);
     delete(vetorbuffer,1,pos(',',vetorbuffer));
     
     fillchar(temporario3,tamanhonomearquivo,byte( ' ' ));
-    temporario3 := copy(vetorbuffer,1,(pos(',',vetorbuffer)-1));
+    temporario3 := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario3,maximo,retorno);
     delete(vetorbuffer,1,pos(',',vetorbuffer));
     
     fillchar(temporario4,tamanhonomearquivo,byte( ' ' ));
-    temporario4 := copy(vetorbuffer,1,(pos(',',vetorbuffer)-1));
+    temporario4 := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario4,tamanho,retorno);
     delete(vetorbuffer,1,pos(',',vetorbuffer));
+
+	writeln('b: ',temporario1,' modulo: ',temporario2);
+    writeln('Tamanho: ',temporario3, ' registros.');
+    writeln('Numero de linhas: ',temporario4);
     
     if caractere = 'S' then
     begin
@@ -381,6 +391,8 @@ BEGIN
         vetorbuffer := concat('b: ',temporario1,' modulo: ',temporario2);
         fastwriteln(vetorbuffer);
         vetorbuffer := concat('Tamanho: ',temporario3, ' registros.');
+        fastwriteln(vetorbuffer);
+        vetorbuffer := concat('Numero de linhas: ',temporario4);
         fastwriteln(vetorbuffer);
     end;
     
@@ -394,7 +406,7 @@ BEGIN
 (* Le o arquivo de hashes, pegando todos os numeros de hash e salvando num vetor *)
 
     if caractere = 'P' then fastwriteln('Le arquivo de hashes');
-    learquivohashes(tamanho,maximo);
+    learquivohashes(hash,tamanho,maximo);
 
 (* Pede o nome exato de um arquivo a ser procurado *)
 
@@ -417,7 +429,7 @@ BEGIN
 (* Faz a busca binaria no vetor *)
 
     if caractere = 'P' then fastwriteln('Faz busca.');
-    buscabinarianomearquivo(vetorhashes, hash, maximo, posicao, tentativas);
+    buscabinarianomearquivo(hash, maximo, posicao, tentativas);
  
 (* Tendo a posicao certa, le o registro e verifica se o nome bate. *)
 (*  Ou entao, diz que nao tem aquele nome no arquivo *)
