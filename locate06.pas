@@ -68,9 +68,9 @@ begin
     while (comeco <= fim) and (encontrou = false) do
     begin
         meio:=(comeco+fim) div 2;
-
+{
         writeln('Comeco: ',comeco,' Meio: ',meio,' fim: ',fim,' hash: ',hash,' Pesquisa: ',vetorhashes[meio]);
-       
+}       
         if (hash = vetorhashes[meio]) then
             encontrou:=true
         else
@@ -173,7 +173,7 @@ end;
 
 procedure learquivohashes(hash, tamanho, maximo: integer);
 var
-    registros, entradas, nalinha, linhas, repeticoes, contador: integer;
+    registros, entradas, posicao, linha, repeticoes, contador: integer;
     vetorbuffer: buffervector;
     letra: char;
     hashemtexto: string[6];
@@ -181,7 +181,7 @@ var
 begin
 (* Le com um blockread e separa, jogando cada hash em uma posicao em um vetor. *)
 
-    registros := 1;
+    linha := 1;
     entradas := 1;
     hashemtexto := ' ';
     fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
@@ -189,17 +189,16 @@ begin
 {
 	writeln('hash: ',hash,' tamanho: ',tamanho,' maximo: ',maximo);
 }
-	entradas := 1;
-	while (entradas <= tamanho) do
+	while (linha < (tamanho - 1)) or (entradas < maximo) do 
     begin
-        seek(arquivohashes,registros);
+        seek(arquivohashes,linha);
         blockread(arquivohashes,vetorbuffer,1,retorno);
         delete(vetorbuffer,1,32);
 {
         writeln('vetorbuffer: ',vetorbuffer);
 }
-        nalinha := 1;
-        while (nalinha <= porlinha) do
+        posicao := 1;
+        while (posicao <= porlinha) do
         begin
             contador := 0;
             fillchar(hashemtexto,6,byte( ' ' ));
@@ -215,19 +214,19 @@ begin
             begin
                 vetorhashes[entradas + repeticoes] := hash;
                 contador := contador + 1;
-
+{
                 writeln('vetorhashes[',entradas + repeticoes,']=',vetorhashes[entradas + repeticoes]);
-
+}
             end;
           
             entradas := entradas + contador;
-            nalinha := nalinha + 1;
+            posicao := posicao + 1;
         end;
 {
-		writeln('Registro: ',registros,' entrada no vetor: ',entradas,' vetorbuffer: ',vetorbuffer);
+		writeln('Linha: ',linha,' maximo: ',maximo,' entrada: ',entradas,' tamanho: ',tamanho);
 }
         fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
-        registros := registros + 1;
+        linha := linha + 1;
     end;
 end;
 
@@ -356,8 +355,6 @@ BEGIN
     seek(arquivohashes,0);
     blockread(arquivohashes,vetorbuffer,1,retorno);
     
-    writeln('Vetorbuffer: ',vetorbuffer);
-
     fillchar(temporario1,tamanhonomearquivo,byte( ' ' ));
     temporario1 := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario1,b,retorno);
@@ -377,11 +374,7 @@ BEGIN
     temporario4 := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario4,tamanho,retorno);
     delete(vetorbuffer,1,pos(',',vetorbuffer));
-
-	writeln('b: ',temporario1,' modulo: ',temporario2);
-    writeln('Tamanho: ',temporario3, ' registros.');
-    writeln('Numero de linhas: ',temporario4);
-    
+  
     if caractere = 'S' then
     begin
         vetorbuffer := concat('Arquivo com os registros: ',nomearquivoregistros);
