@@ -5,8 +5,8 @@ Esta é uma tentativa de um utilitário para MSX, semelhante ao locate, do Linux
 
 ## Os links rápidos.
 
-- [Sexta versão do programa para fazer o update](update06.pas)
-- [Sexta versão do programa que faz a localização](locate06.pas)
+- [Sétima versão do programa para fazer o update](update07.pas)
+- [Sétima versão do programa que faz a localização](locate07.pas)
 
 ## Algumas explicações.
 
