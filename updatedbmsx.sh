@@ -79,7 +79,7 @@ $UPDATE linux 0.txt
 # ao drive A e salvara la o banco de dados, alem de setar a variavel de ambiente 
 # dentro do AUTOEXEC.BAT.
 #
-#LOCATEDB=$DIRETORIO_ORIGINAL"/"$BASELOCATE"/UTILS/LOCATE/DB"
+#LOCATEDB=$DIRETORIO_ORIGINAL"/"$BASELOCATE"/UTILS/LOCATE/DB/ "
 #mkdir -p $LOCATEDB
 #$CP *.dat *.hsh $LOCATEDB
 #cat $DIRETORIO_ORIGINAL"/"$BASELOCATE"/AUTOEXEC.BAT" | sed -e "\$aset locatedb=a:\\\utils\\\locate\\\db" > $TEMP2
@@ -88,6 +88,3 @@ $UPDATE linux 0.txt
 exit 0
 #
 #MSX r0x a lot.
-
-
-
