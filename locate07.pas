@@ -19,9 +19,13 @@
 
 program locate07;
 
+{$X+}
+{$W1}
+{$A+}
+
 {$i d:types.inc}
-{$i d:dos.inc}
 {$i d:fastwrit.inc}
+{$i d:dos.inc}
 
 const
     tamanhonomearquivo = 40;
@@ -51,7 +55,8 @@ var
     vetorhashes: registervector;
     entradadocomando: array [1..4] of filename;
     pesquisa: filename;
-    temporario, temporario2: string[9];
+    temporario: string[9];
+    temporario2: string[5];
     ficha: registro;
     b, modulo, tamanho, posicao, tentativas, maximo, retorno: integer;
     j, hash, hashtemporario, cima, baixo, limite: integer;
@@ -75,9 +80,7 @@ begin
     while (comeco <= fim) and (encontrou = false) do
     begin
         meio:=(comeco+fim) div 2;
-{
-        writeln('Comeco: ',comeco,' Meio: ',meio,' fim: ',fim,' hash: ',hash,' Pesquisa: ',vetorhashes[meio]);
-}       
+{        writeln('Comeco: ',comeco,' Meio: ',meio,' fim: ',fim,' hash: ',hash,' Pesquisa: ',vetorhashes[meio]); }       
         if (hash = vetorhashes[meio]) then
             encontrou:=true
         else
@@ -101,12 +104,8 @@ begin
     hashemtexto:='';
     seek(arquivoregistros,posicao - 1);
     blockread(arquivoregistros,vetorbuffer,1);
-{
-    writeln(vetorbuffer);
-}
-
+{    writeln(vetorbuffer);  }
 (* Copia o hash do nome do arquivo e apaga o que nao sera usado *)      
-
     fillchar(hashemtexto,length(hashemtexto),byte( ' ' ));
     hashemtexto := copy(vetorbuffer,1,(pos(',',vetorbuffer)-1));
     delete(vetorbuffer,1,pos(',',vetorbuffer));
@@ -135,11 +134,9 @@ begin
     hash2:=0.0;
     for i:=1 to length(nomearquivo) do
     begin
-(*  Aqui temos um problema. A funcao modulo nao pode ser usada com
-    reais e foi necessario usar reais porque o valor e muito grande
-    para trabalhar com inteiros - estoura o limite.
-    Modulo = resto da divisao inteira: c <- a - b * (a / b).
-*)
+(*  Modulo nao pode ser usada com reais e precisei usar reais porque o
+    valor e muito grande para trabalhar com inteiros.
+    Modulo = resto da divisao inteira: c <- a - b * (a / b). *)
         a := (hash2 * b + ord(nomearquivo[i]));
         hash2 := (a - modulo * int(a / modulo));
         hash := round(hash2);
@@ -161,17 +158,13 @@ begin
     hashemtexto := ' ';
     fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
     fillchar(hashemtexto,6,byte( ' ' ));
-{
-    writeln('hash: ',hash,' tamanho: ',tamanho,' maximo: ',maximo);
-}
+{    writeln('hash: ',hash,' tamanho: ',tamanho,' maximo: ',maximo); }
     while (linha < (tamanho - 1)) or (entradas < maximo) do 
     begin
         seek(arquivohashes,linha);
         blockread(arquivohashes,vetorbuffer,1,retorno);
         delete(vetorbuffer,1,32);
-{
-        writeln('vetorbuffer: ',vetorbuffer);
-}
+{        writeln('vetorbuffer: ',vetorbuffer);  }
         posicao := 1;
         while (posicao <= porlinha) do
         begin
@@ -182,24 +175,18 @@ begin
             letra := hashemtexto[pos(',',hashemtexto) - 1];
             delete(hashemtexto,pos(',',hashemtexto) - 1,(pos(',',hashemtexto)));
             val(hashemtexto,hash,retorno);
-{
-            writeln('Hash em texto: ',hashemtexto,' hash: ',hash,' letra: ',letra);
-}
+{            writeln('Hash em texto: ',hashemtexto,' hash: ',hash,' letra: ',letra); }
             for repeticoes := 0 to (ord ( letra ) - 65) do
             begin
                 vetorhashes[entradas + repeticoes] := hash;
                 contador := contador + 1;
-{
-                writeln('vetorhashes[',entradas + repeticoes,']=',vetorhashes[entradas + repeticoes]);
-}
+{                writeln('vetorhashes[',entradas + repeticoes,']=',vetorhashes[entradas + repeticoes]); }
             end;
           
             entradas := entradas + contador;
             posicao := posicao + 1;
         end;
-{
-        writeln('Linha: ',linha,' maximo: ',maximo,' entrada: ',entradas,' tamanho: ',tamanho);
-}
+{        writeln('Linha: ',linha,' maximo: ',maximo,' entrada: ',entradas,' tamanho: ',tamanho); }
         fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
         linha := linha + 1;
     end;
@@ -289,16 +276,15 @@ BEGIN
         letradedrive := caminho[0];
         insert(letradedrive,caminho,1);
     end;
+    
+    if caminho = '' then caminho := 'a:\utils\locale\db\'; 
    
     for b := 1 to 4 do entradadocomando[b] := paramstr(b);
 
 (* Sem parametros o comando apresenta o help. *)
-
     if paramcount = 0 then helpdocomando;
 
-(* Antes de tratar como seria com um parametro, pega tudo e passa *)
-(* para maiusculas. *)
-    
+(* Passa tudo para maiusculas. *)
     for j := 1 to 3 do
     begin
         vetorbuffer := paramstr(j);
@@ -309,9 +295,7 @@ BEGIN
         entradadocomando[j] := vetorbuffer;
     end;
 
-(* Com um parametro. Se for o /h ou /help, apresenta o help.    *)  
-(* Se for o /v ou /version, apresenta a versao do programa.     *)  
-    
+(* Com um parametro. /h ou /help, é o help. /v ou /version, versao do programa.     *)  
     caractere:=' ';
     if (entradadocomando[parametro] = '/A') or (entradadocomando[parametro] = '/CHANGE')    then caractere := 'A';
     if (entradadocomando[parametro] = '/C') or (entradadocomando[parametro] = '/COUNT')     then caractere := 'C';
@@ -331,12 +315,9 @@ BEGIN
         if pos('.',entradadocomando[b]) <> 0 then parametro := b;
 
 (* O 1o parametro e o nome a ser pesquisado. *)
-    
     pesquisa := entradadocomando[parametro];
-{
-    nomearquivoregistros := 'teste.dat';
-    nomearquivohashes := 'teste.hsh';
-}
+{    nomearquivoregistros := 'teste.dat';
+     nomearquivohashes := 'teste.hsh'; }
     primeiraletra := upcase(pesquisa[1]);
     
     retorno := ord(primeiraletra);
@@ -351,7 +332,6 @@ BEGIN
     nomearquivohashes := concat(primeiraletra,'.hsh');
     
 (* Abre o arquivo, informa números dele e vai pra busca *)
-
     if caractere = 'P' then fastwriteln('Abre arquivo de registros');
     assign(arquivoregistros,nomearquivoregistros);
     reset(arquivoregistros);
@@ -363,7 +343,6 @@ BEGIN
 (* Le de um arquivo separado o hash *)
 (* Na posicao 0 temos o valor de b, o modulo, o máximo de entradas *)
 (* e o numero de linhas. *)
-
     fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
     seek(arquivohashes,0);
     blockread(arquivohashes,vetorbuffer,1,retorno);
@@ -414,12 +393,10 @@ BEGIN
     end;
 
 (* Le o arquivo de hashes, pegando todos os numeros de hash e salvando num vetor *)
-
     if caractere = 'P' then fastwriteln('Le arquivo de hashes');
     learquivohashes(hash,tamanho,maximo);
 
 (* Pede o nome exato de um arquivo a ser procurado *)
-
     if caractere = 'P' then
     begin
         vetorbuffer := concat('Nome do arquivo: ', pesquisa);
@@ -427,7 +404,6 @@ BEGIN
     end;
         
 (* Calcula o hash do nome da pesquisa *)
-
     hash:=calculahash(pesquisa);
     if caractere = 'P' then
     begin
@@ -437,13 +413,11 @@ BEGIN
     end;
     
 (* Faz a busca binaria no vetor *)
-
     if caractere = 'P' then fastwriteln('Faz busca.');
     buscabinarianomearquivo(hash, maximo, posicao, tentativas);
  
 (* Tendo a posicao certa, le o registro e verifica se o nome bate. *)
-(*  Ou entao, diz que nao tem aquele nome no arquivo *)
-
+(* Ou retorna nada. *)
     if posicao <> 0 then
     begin
         j := posicao;
@@ -453,9 +427,7 @@ BEGIN
             j := j - 1;
             hashtemporario := vetorhashes[j];
         end;
-{
-        writeln(' Existem mais ',(posicao - j) - 1,' entradas iguais, de ',j + 1,' a ',posicao,' - acima');
-}
+{        writeln(' Existem mais ',(posicao - j) - 1,' entradas iguais, de ',j + 1,' a ',posicao,' - acima'); }
         baixo := j + 1;
         j := posicao;
         hashtemporario := hash;
@@ -464,9 +436,7 @@ BEGIN
             j := j + 1;
             hashtemporario := vetorhashes[j];
         end;
-{
-        writeln(' Existem mais ',(j - posicao) - 1,' entradas iguais, de ',posicao,' a ',j - 1,' - abaixo');
-}
+{        writeln(' Existem mais ',(j - posicao) - 1,' entradas iguais, de ',posicao,' a ',j - 1,' - abaixo'); }
         cima := j - 1;
         
         if caractere = 'C' then
