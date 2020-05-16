@@ -56,8 +56,7 @@ Ah, tem muitas coisas ainda a serem mexidas. Segue a lista:
 - - ~~Ele também tem que ser capaz de fazer a busca por arquivos que comecem com algum caracter que não é uma letra, e buscar no arquivo correspondente.~~
 - - ~~Usar rotinas para impressão mais rápida na tela. O write/writeln do TP3 usa a BDOS, então imprime na tela, mas é lento. Usando rotinas que estão disponíveis nas bibliotecas dos irmãos Lammassaari, eu obtive um ganho de desempenho de 15 a 20% na saída.~~
 - - ~~Fazer a leitura de uma variável de ambiente, setada no MSX-DOS 2 para colocar o caminho para o banco de dados. A variável de ambiente será a LOCALEDB, e a entrada será, a princípio, a:\UTILS\LOCATE\DB.~~
-- - Usar as rotinas disponibilizadas pelo [PopolonY2K](https://sourceforge.net/projects/oldskooltech/) para facilitar a abertura de arquivos em diretórios que não são os seus, já que o blockread tem problemas com isto.
-- - Adaptar o programa para usar a variável de ambiente LOCATEDB, e se não tiver ela definida, usar o argumento padrão.
+- - Usar as rotinas disponibilizadas pelo [PopolonY2K](https://sourceforge.net/projects/oldskooltech/) para facilitar a abertura de arquivos em diretórios que não são os seus, já que o blockread tem problemas com isto. UPDATE: Estou empacado com essas rotinas, socorro.
 - - Colocar rotinas de tratamento de erros (arquivo não existe, etc).
 - - Parâmetro riscado lá em cima - será possível fazer com que ele execute o comando cd para já colocar o prompt no diretório onde aquele arquivo está.
 
