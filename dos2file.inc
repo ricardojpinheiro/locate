@@ -13,7 +13,6 @@ Const   ctInvalidFileHandle        = $FF; { Invalid file handle operation }
 
 Type TFileMode = String[3];
 
-
 (**
   * Open/Create a file with specified file name;
   * @param strFileName The name of file to open/create;
@@ -159,7 +158,7 @@ End;
   * @param nFileHandle The file handle to perform the position change;
   * @param nOffset The new offset of the file handle pointer;
   * @param nOrigin The position from where nOffset is added. This
-  * parmeter is specified by one of following constants defined like
+  * parameter is specified by one of following constants defined like
   * below:
   * ctSeekSet - Relative Beginning of the file;
   * ctSeekCur - Relative current pointer position;

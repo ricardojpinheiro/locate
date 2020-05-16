@@ -1,5 +1,5 @@
 { 
-   update06.pas
+   update07.pas
    
    Copyright 2020 Ricardo Jurczyk Pinheiro <ricardo@aragorn>
 *  
@@ -15,12 +15,14 @@
 
 program update06;
 
+{$H+}
+
 const
 	tamanhonomearquivo = 40;
 	tamanhototalbuffer = 127; (* Mas é possível reduzir o buffer para 94.*)
 	tamanhodiretorio = 87;
-	max = 9000;
-	porlinha = 13;
+	max = 8200;
+	porlinha = 16;
 
 type
 	absolutepath = string[tamanhodiretorio];
@@ -63,7 +65,7 @@ end;
 procedure abrearquivohashes (nomearquivohashes: filename);
 begin
 	assign(arquivohashes,nomearquivohashes);
-	rewrite(arquivohashes);
+	rewrite(arquivohashes,512);
 end;
 
 procedure fechaarquivotexto;
@@ -164,10 +166,12 @@ begin
 end;
 
 procedure geraarquivohashes (maximo: integer);
+const
+    topo = 2047;
 var
-	i, j, k, hash, proximohash, contador, retorno: integer;
-	vetorbuffer: buffervector;
-	hashemtexto, temporario1, temporario2, temporario3, temporario4: string[6];
+	i, j, k, l, m, hash, proximohash, contador, retorno: integer;
+	vetorbuffer: array[0..topo] of char;
+	hashemtexto, temporario1, temporario2, temporario3, temporario4: string[7];
 	
 begin
 { Joga num arquivo separado o hash }
@@ -187,8 +191,9 @@ begin
 	j := 1;
 	hashemtexto := ' ';
 	repeat 
-		fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
-		k := 1;
+		fillchar(vetorbuffer,topo,byte( ' ' ));
+        k := 1;
+        l := 1;
 		while (k <= porlinha) do
 		begin
 			contador := 0;
@@ -206,17 +211,32 @@ begin
 				hash := 0;
 			fillchar(hashemtexto,length(hashemtexto),byte( ' ' ));
 			str(hash,hashemtexto);
-			hashemtexto := concat(hashemtexto,chr ( contador + 64 ));
-			vetorbuffer := concat(vetorbuffer,hashemtexto,',');
+			hashemtexto := concat(hashemtexto, chr(contador + 64),',');
+
+            for m := 1 to length(hashemtexto) do
+            begin
+                vetorbuffer[l] := hashemtexto[m];
+                l := l + 1;
+            end;
+            
+            for m := l to topo do
+                vetorbuffer[m] := ' ';
+
 			j := j + contador;
 			k := k + 1;
 		end;
-		seek(arquivohashes,i);
+        
+        vetorbuffer[l] := 'x';
+        
+        seek(arquivohashes,i);
 		blockwrite(arquivohashes,vetorbuffer,1,retorno);
-		i := i + 1;
 {
-		writeln('maximo: ',maximo,' i: ',i,' j: ',j,' vetorbuffer: ',vetorbuffer);
+		writeln('maximo: ',maximo,' i: ',i,' j: ',j);
+        for m := 1 to 511 do
+            write(vetorbuffer);
+        writeln;
 }
+        i := i + 1;
 	until j >= maximo;
 { Grava no arquivo de hashes, na posicao 0, o valor de b, o modulo, }
 { o numero maximo de entradas e o numero maximo de registros }
@@ -234,7 +254,8 @@ begin
 	str(modulo,temporario2);
 	str(maximo,temporario3);
 	str(i,temporario4);
-	vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',',temporario4,',');
+	insert('0',temporario1,1);
+    vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',',temporario4,',');
  	seek(arquivohashes,0);
 	blockwrite(arquivohashes,vetorbuffer,1,retorno);
 end;
@@ -293,7 +314,7 @@ begin
 	{ 	Zera a variavel, enche de espacos em branco. } 
 		fillchar(vetorbuffer,tamanhototalbuffer,Byte( ' ' ));
 	{ Coloca o tamanho da string no primeiro byte (0) }	
-		vetorbuffer[0] := #0;
+    {   vetorbuffer[0] := #0;   }
 	{ Monta a string que sera salva. }
 		vetorbuffer:=concat(hashemtexto,',',vetorregistros[i].nomearquivo,',',vetorregistros[i].diretorio,',');
 	{ Grava no arquivo de registros. }

@@ -16,8 +16,10 @@
 
 program locate06;
 
-{$i d:wrtvram.inc}
+{$i d:types.inc}
 {$i d:fastwrit.inc}
+{$i d:dos.inc}
+{$i d:dos2file.inc}
     
 const
     tamanhonomearquivo = 40;
@@ -42,8 +44,7 @@ type
 var
     arquivoregistros: registerfile;
     arquivohashes: hashfile;
-    nomearquivoregistros: filename;
-    nomearquivohashes: filename;
+    nomearquivoregistros, nomearquivohashes: buffervector;
     vetorhashes: registervector;
     vetorbuffer: buffervector;
     temporario: buffervector;
@@ -54,6 +55,11 @@ var
     j, hash, hashtemporario, cima, baixo, limite: integer;
     parametro: byte;
     caractere, primeiraletra: char;
+(**)
+    versao : TMSXDOSVersion;
+    registros: TRegs;
+    letradedrive: char;
+    caminho: buffervector;
 
 procedure buscabinarianomearquivo (hash, fim: integer; var posicao, tentativas: integer);
 var
@@ -91,28 +97,6 @@ begin
     reset(arquivoregistros); 
     {$i+}
     existearquivo:=(IOResult = 0);
-end;
-
-procedure abrearquivoregistros (nomearquivoregistros: filename);
-begin
-    assign(arquivoregistros,nomearquivoregistros);
-    reset(arquivoregistros);
-end;
-
-procedure abrearquivohashes (nomearquivohashes: filename);
-begin
-    assign(arquivohashes,nomearquivohashes);
-    reset(arquivohashes);
-end;
-
-procedure fechaarquivoregistros;
-begin
-    close(arquivoregistros);
-end;
-
-procedure fechaarquivohashes;
-begin
-    close(arquivohashes);
 end;
 
 procedure leregistronoarquivo(var arquivoregistros: registerfile; var vetorbuffer: buffervector; posicao: integer);
@@ -272,7 +256,24 @@ begin
     fastwriteln('no MSX-DOS. Faca essas alteracoes no AUTOEXEC.BAT, usando o comando SET.');
     fastwriteln(' ');
     halt;
-end;    
+end;
+
+function LastPos(chr: char; s: TString): integer;
+var
+    i: integer;
+    found: boolean;
+begin
+    i := length(s);
+    found := false;
+    repeat
+        if S[i] = Chr then
+        begin
+            LastPos := i + 1;
+            found := true;
+        end;
+        i := i - 1;
+    until found = true;
+end;
 
 BEGIN
     parametro := 0;
@@ -283,6 +284,43 @@ BEGIN
     fillchar(temporario2,length(temporario2),byte( ' ' ));
 
     clrscr;
+
+    GetMSXDOSVersion ( versao );
+
+    if ( versao.nKernelMajor < 2 ) then
+    begin
+        fastwriteln('MSX-DOS 1.x não suportado.');
+        halt;
+    end
+    else 
+    begin
+        fillchar(temporario,length(temporario),byte( ' ' ));
+        fillchar(caminho,tamanhototalbuffer,byte( ' ' ));
+        temporario[0] := 'l';
+        temporario[1] := 'o';
+        temporario[2] := 'c';
+        temporario[3] := 'a';
+        temporario[4] := 'l';
+        temporario[5] := 'e';
+        temporario[6] := 'd';
+        temporario[7] := 'b';
+        temporario[8] := #0;
+       
+        caminho[0] := #0;
+        with registros do
+        begin
+            B := sizeof ( caminho );
+            C := ctGetEnvironmentItem;
+            HL := addr ( temporario );
+            DE := addr ( caminho );
+        end;
+   
+        MSXBDOS ( registros );
+        letradedrive := caminho[0];
+        insert(letradedrive,caminho,1);
+    end;
+        
+    if caminho = '' then caminho := 'a:\utils\locale\db\'; 
    
     for b := 1 to 4 do entradadocomando[b] := paramstr(b);
 
@@ -336,16 +374,23 @@ BEGIN
     fillchar(nomearquivoregistros,length(nomearquivoregistros),byte( ' ' ));
     fillchar(nomearquivohashes,length(nomearquivohashes),byte( ' ' ));
     
-    nomearquivoregistros := concat(primeiraletra,'.dat');
-    nomearquivohashes := concat(primeiraletra,'.hsh');
+    delete(caminho,LastPos('\',caminho),length(caminho));
+    
+    nomearquivoregistros := concat(caminho,primeiraletra,'.dat');
+    nomearquivohashes := concat(caminho,primeiraletra,'.hsh');
+
+    writeln(nomearquivoregistros);
+    writeln(nomearquivohashes);
     
 (* Abre o arquivo, informa números dele e vai pra busca *)
 
     if caractere = 'P' then fastwriteln('Abre arquivo de registros');
-    abrearquivoregistros(nomearquivoregistros);
-    
+    assign(arquivoregistros,nomearquivoregistros);
+    reset(arquivoregistros);
+
     if caractere = 'P' then fastwriteln('Abre arquivo de hashes');
-    abrearquivohashes(nomearquivohashes);
+    assign(arquivohashes,nomearquivohashes);
+    reset(arquivohashes);
 
 (* Le de um arquivo separado o hash *)
 (* Na posicao 0 temos o valor de b, o modulo, o máximo de entradas *)
@@ -487,5 +532,6 @@ BEGIN
 
 (* Fecha o arquivo *)
     if caractere = 'P' then fastwriteln('Fecha arquivo.');
-    fechaarquivoregistros;
+    close(arquivoregistros);
+    close(arquivohashes);
 END.

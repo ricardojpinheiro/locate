@@ -22,17 +22,20 @@ program locate07;
 {$X+}
 {$W1}
 {$A+}
-
+{$R-}
+{$i d:memory.inc}
 {$i d:types.inc}
 {$i d:fastwrit.inc}
 {$i d:dos.inc}
+{$i d:dos2file.inc}
+{$i d:dpb.inc}
 
 const
     tamanhonomearquivo = 40;
     tamanhototalbuffer = 127;
     tamanhodiretorio = 87;
-    max = 9000;
-    porlinha = 15;
+    max = 8200;
+    porlinha = 85;
 
 type
     absolutepath = string[tamanhodiretorio];
@@ -48,13 +51,16 @@ type
     registervector = array[1..max] of integer;
     
 var
+
     arquivoregistros: registerfile;
     arquivohashes: hashfile;
+
     nomearquivoregistros, nomearquivohashes: filename;
     caminho, vetorbuffer: buffervector;
     vetorhashes: registervector;
     entradadocomando: array [1..4] of filename;
     pesquisa: filename;
+    nomearquivocompleto: buffervector;
     temporario: string[9];
     temporario2: string[5];
     ficha: registro;
@@ -63,9 +69,14 @@ var
     parametro: byte;
     caractere, primeiraletra: char;
     versao : TMSXDOSVersion;
-    
+(**)    
     registros: TRegs;
     letradedrive: char;
+    arqreg, arqhsh: byte;
+    testeseek: boolean;
+    dpb: TDPB;
+    nDrive: byte;
+    caminho: buffervector;
     
 procedure buscabinarianomearquivo (hash, fim: integer; var posicao, tentativas: integer);
 var
@@ -79,22 +90,24 @@ begin
     encontrou   :=  false;
     while (comeco <= fim) and (encontrou = false) do
     begin
-        meio:=(comeco+fim) div 2;
-{        writeln('Comeco: ',comeco,' Meio: ',meio,' fim: ',fim,' hash: ',hash,' Pesquisa: ',vetorhashes[meio]); }       
+        meio := (comeco + fim) div 2;
+
+        writeln('Comeco: ',comeco,' Meio: ',meio,' fim: ',fim,' hash: ',hash,' Pesquisa: ',vetorhashes[meio]);
+
         if (hash = vetorhashes[meio]) then
-            encontrou:=true
+            encontrou := true
         else
             if (hash < vetorhashes[meio]) then
-                fim:=meio-1
+                fim := meio - 1
             else
-                comeco:=meio+1;
-        tentativas:=tentativas+1;
+                comeco := meio + 1;
+        tentativas := tentativas + 1;
     end;
     if encontrou = true then
-        posicao:=meio;
+        posicao := meio;
 end;
 
-procedure leregistronoarquivo(var arquivoregistros: registerfile; var vetorbuffer: buffervector; posicao: integer);
+procedure leregistronoarquivo(var arqreg: byte; var vetorbuffer: buffervector; posicao: integer);
 var
     hash: integer;
     hashemtexto: string[5];
@@ -102,9 +115,18 @@ var
 begin
     retorno:=0;
     hashemtexto:='';
+{    
     seek(arquivoregistros,posicao - 1);
     blockread(arquivoregistros,vetorbuffer,1);
-{    writeln(vetorbuffer);  }
+}   
+    posicao := posicao - 1;
+    testeseek := FileSeek(arqreg, (posicao * (dpb.BytesPerSector div 4)), 0, retorno);
+    retorno := FileBlockRead(arqreg, vetorbuffer, 127);
+
+    writeln('posicao: ', posicao,' vetorbuffer: ',vetorbuffer);
+
+    delete (vetorbuffer,1,pos(',',vetorbuffer));
+
 (* Copia o hash do nome do arquivo e apaga o que nao sera usado *)      
     fillchar(hashemtexto,length(hashemtexto),byte( ' ' ));
     hashemtexto := copy(vetorbuffer,1,(pos(',',vetorbuffer)-1));
@@ -124,7 +146,7 @@ begin
 
 end;
 
-function calculahash (nomearquivo: filename): integer;
+function calculahash (nomearquivo: filename; b, modulo: real): integer;
 var
     i, hash: integer;
     a, hash2: real;
@@ -145,49 +167,78 @@ begin
 end;
 
 procedure learquivohashes(hash, tamanho, maximo: integer);
+const
+    topo = 2047;
 var
     registros, entradas, posicao, linha, repeticoes, contador: integer;
-    letra: char;
+    l: byte;
+    m: integer;
+    letra, caractere: char;
     hashemtexto: string[6];
-    
+    vetorbuffer: array[0..topo] of char;
+        
 begin
 (* Le com um blockread e separa, jogando cada hash em uma posicao em um vetor. *)
 
     linha := 1;
     entradas := 1;
-    hashemtexto := ' ';
-    fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
-    fillchar(hashemtexto,6,byte( ' ' ));
-{    writeln('hash: ',hash,' tamanho: ',tamanho,' maximo: ',maximo); }
-    while (linha < (tamanho - 1)) or (entradas < maximo) do 
+    for m := 1 to 6 do
+        hashemtexto[m] := ' ';
+    for l := 0 to topo do
+        vetorbuffer[l] := ' ';
+    
+    while (linha < tamanho) do
     begin
+{
         seek(arquivohashes,linha);
         blockread(arquivohashes,vetorbuffer,1,retorno);
-        delete(vetorbuffer,1,32);
-{        writeln('vetorbuffer: ',vetorbuffer);  }
+}
+        testeseek := FileSeek(arqhsh, ((linha * dpb.BytesPerSector) div 4), 0, retorno);
+        retorno := FileBlockRead(arqhsh, vetorbuffer, 511);
+
+        writeln('linha: ', linha,' tamanho: ', tamanho, ' entradas: ',entradas, 
+        ' maximo: ', maximo);
+        for l := 0 to 511 do
+            write(vetorbuffer[l]);
+        writeln;
+                
         posicao := 1;
+        m := 0;
         while (posicao <= porlinha) do
         begin
+            l := 0;
             contador := 0;
+{
             fillchar(hashemtexto,6,byte( ' ' ));
-            hashemtexto := copy(vetorbuffer,1,pos(',',vetorbuffer));
-            delete(vetorbuffer,1,pos(',',vetorbuffer));
-            letra := hashemtexto[pos(',',hashemtexto) - 1];
-            delete(hashemtexto,pos(',',hashemtexto) - 1,(pos(',',hashemtexto)));
-            val(hashemtexto,hash,retorno);
-{            writeln('Hash em texto: ',hashemtexto,' hash: ',hash,' letra: ',letra); }
+}            
+            repeat
+                l := l + 1;
+                m := m + 1;
+                hashemtexto[l] := vetorbuffer[m];
+            until vetorbuffer[m] = ',';
+            
+            hashemtexto[0] := chr(l);
+            letra := hashemtexto[l - 1];
+            
+            delete(hashemtexto, l - 1, l);
+            val(hashemtexto, hash, retorno);
+{
+            writeln('Hash em texto: ',hashemtexto,' hash: ',hash,' letra: ',letra); 
+}
             for repeticoes := 0 to (ord ( letra ) - 65) do
             begin
                 vetorhashes[entradas + repeticoes] := hash;
                 contador := contador + 1;
-{                writeln('vetorhashes[',entradas + repeticoes,']=',vetorhashes[entradas + repeticoes]); }
+{
+                 writeln('vetorhashes[',entradas + repeticoes,']=',vetorhashes[entradas + repeticoes]); 
+}
             end;
-          
             entradas := entradas + contador;
             posicao := posicao + 1;
         end;
-{        writeln('Linha: ',linha,' maximo: ',maximo,' entrada: ',entradas,' tamanho: ',tamanho); }
-        fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
+{
+         writeln('Linha: ',linha,' maximo: ',maximo,' entrada: ',entradas,' tamanho: ',tamanho); 
+}
         linha := linha + 1;
     end;
 end;
@@ -213,7 +264,7 @@ end;
 
 procedure versaodocomando;
 begin
-    fastwriteln('locate versao 0.5'); 
+    fastwriteln('locate versao 0.6'); 
     fastwriteln('Copyright (c) 2020 Brazilian MSX Crew.');
     fastwriteln('Alguns direitos reservados.');
     fastwriteln('Este software e distribuido segundo a licenca GPL.');
@@ -279,6 +330,13 @@ BEGIN
     
     if caminho = '' then caminho := 'a:\utils\locale\db\'; 
    
+    nDrive := 0;
+    if (GetDPB(nDrive, dpb) = ctError ) then
+    begin
+        writeln('Erro ao obter o DPB');
+        halt;
+    end;   
+   
     for b := 1 to 4 do entradadocomando[b] := paramstr(b);
 
 (* Sem parametros o comando apresenta o help. *)
@@ -316,8 +374,10 @@ BEGIN
 
 (* O 1o parametro e o nome a ser pesquisado. *)
     pesquisa := entradadocomando[parametro];
-{    nomearquivoregistros := 'teste.dat';
-     nomearquivohashes := 'teste.hsh'; }
+{
+     nomearquivoregistros := 'teste.dat';
+     nomearquivohashes := 'teste.hsh'; 
+}
     primeiraletra := upcase(pesquisa[1]);
     
     retorno := ord(primeiraletra);
@@ -330,23 +390,40 @@ BEGIN
     
     nomearquivoregistros := concat(primeiraletra,'.dat');
     nomearquivohashes := concat(primeiraletra,'.hsh');
+
+    caminho := '';
     
 (* Abre o arquivo, informa números dele e vai pra busca *)
     if caractere = 'P' then fastwriteln('Abre arquivo de registros');
+    fillchar(nomearquivocompleto,length(nomearquivocompleto),byte( ' ' ));
+    nomearquivocompleto:=concat(caminho,nomearquivoregistros);
+    arqreg := FileOpen(nomearquivocompleto,'r');
+{
     assign(arquivoregistros,nomearquivoregistros);
     reset(arquivoregistros);
-    
+}
     if caractere = 'P' then fastwriteln('Abre arquivo de hashes');
+    fillchar(nomearquivocompleto,length(nomearquivocompleto),byte( ' ' ));
+    nomearquivocompleto:=concat(caminho,nomearquivohashes);
+    arqhsh := FileOpen(nomearquivocompleto,'r');
+{
     assign(arquivohashes,nomearquivohashes);
     reset(arquivohashes);
-
+}
 (* Le de um arquivo separado o hash *)
 (* Na posicao 0 temos o valor de b, o modulo, o máximo de entradas *)
 (* e o numero de linhas. *)
-    fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
+{
     seek(arquivohashes,0);
     blockread(arquivohashes,vetorbuffer,1,retorno);
-    
+}
+    retorno := 0;
+    fillchar(vetorbuffer, length(vetorbuffer), byte( ' ' ));
+    testeseek := FileSeek(arqhsh, 0, 0, retorno);
+    retorno := FileBlockRead(arqhsh, vetorbuffer, 31);
+{
+    writeln(vetorbuffer);
+}
     fillchar(temporario,tamanhonomearquivo,byte( ' ' ));
     temporario := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario,b,retorno);
@@ -366,7 +443,9 @@ BEGIN
     temporario := copy(vetorbuffer,1,(pos(',',vetorbuffer) - 1));
     val(temporario,tamanho,retorno);
     delete(vetorbuffer,1,pos(',',vetorbuffer));
-  
+
+    writeln('b: ',b,' modulo: ',modulo,' tamanho: ',tamanho,' maximo: ',maximo); 
+ 
     if caractere = 'S' then
     begin
         str(b,temporario);
@@ -387,7 +466,7 @@ BEGIN
     
     if caractere = 'P' then
     begin
-        str(tamanho,temporario);
+        str(maximo,temporario);
         vetorbuffer := concat('Tamanho: ',temporario, ' registros.');
         fastwriteln(vetorbuffer);
     end;
@@ -399,12 +478,12 @@ BEGIN
 (* Pede o nome exato de um arquivo a ser procurado *)
     if caractere = 'P' then
     begin
-        vetorbuffer := concat('Nome do arquivo: ', pesquisa);
+        vetorbuffer := concat('Nome do arquivo a ser procurado: ', pesquisa);
         fastwriteln(vetorbuffer);
     end;
         
 (* Calcula o hash do nome da pesquisa *)
-    hash:=calculahash(pesquisa);
+    hash:=calculahash(pesquisa, b, modulo);
     if caractere = 'P' then
     begin
         str(hash,temporario);
@@ -415,6 +494,8 @@ BEGIN
 (* Faz a busca binaria no vetor *)
     if caractere = 'P' then fastwriteln('Faz busca.');
     buscabinarianomearquivo(hash, maximo, posicao, tentativas);
+ 
+    writeln('posicao: ',posicao,' tentativas: ',tentativas);
  
 (* Tendo a posicao certa, le o registro e verifica se o nome bate. *)
 (* Ou retorna nada. *)
@@ -427,7 +508,9 @@ BEGIN
             j := j - 1;
             hashtemporario := vetorhashes[j];
         end;
-{        writeln(' Existem mais ',(posicao - j) - 1,' entradas iguais, de ',j + 1,' a ',posicao,' - acima'); }
+       
+        writeln(' Existem mais ',(posicao - j) - 1,' entradas iguais, de ',j + 1,' a ',posicao,' - acima');
+
         baixo := j + 1;
         j := posicao;
         hashtemporario := hash;
@@ -436,7 +519,9 @@ BEGIN
             j := j + 1;
             hashtemporario := vetorhashes[j];
         end;
-{        writeln(' Existem mais ',(j - posicao) - 1,' entradas iguais, de ',posicao,' a ',j - 1,' - abaixo'); }
+        
+        writeln(' Existem mais ',(j - posicao) - 1,' entradas iguais, de ',posicao,' a ',j - 1,' - abaixo');
+
         cima := j - 1;
         
         if caractere = 'C' then
@@ -450,7 +535,7 @@ BEGIN
             
         for j := baixo to cima do
         begin
-            leregistronoarquivo(arquivoregistros,vetorbuffer,j);
+            leregistronoarquivo(arqreg,vetorbuffer,j);
             if pesquisa = ficha.nomearquivo then
             begin
                 if caractere = 'P' then
@@ -474,6 +559,10 @@ BEGIN
 
 (* Fecha o arquivo *)
     if caractere = 'P' then fastwriteln('Fecha arquivos.');
+    testeseek := FileClose(arqhsh);
+    testeseek := FileClose(arqreg);
+{
     close(arquivohashes);
     close(arquivoregistros);
+}
 END.

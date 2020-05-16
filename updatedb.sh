@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # A funcao desse script e fazer a listagem inicial dos arquivos e diretorios.
 # Logo, ele receberá um parâmetro, que é o caminho para o diretório inicial.
