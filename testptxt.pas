@@ -23,11 +23,6 @@
 
 program popolony2k;
 
-{$X+}
-{$W1}
-{$A+}
-{$R-}
-
 {$i d:memory.inc}
 {$i d:types.inc}
 {$i d:dos.inc}
@@ -51,7 +46,7 @@ var
         nDrive: Byte;
     
 BEGIN
-    nomearquivo := 'M.hsh';
+    nomearquivo := 'A.hsh';
     arq := FileOpen(nomearquivo,'r');
 
     nDrive := 0;
@@ -63,7 +58,7 @@ BEGIN
     
     for i:=0 to tamanho do
         vetor[i] := ' ';
-      
+{      
     with dpb do
     begin
         writeln('DPB: ');
@@ -78,7 +73,7 @@ BEGIN
         writeln('Clusters no disco: ',DiskClusters);
         writeln('Setores por FAT: ',SectorsByFAT);
     end;
-
+}
     writeln('Abriu: ',arq);
     writeln('Inicio: '); readln(inicio);
     writeln('Fim: '); readln(fim);
@@ -86,11 +81,12 @@ BEGIN
 
     for j := inicio to fim do
     begin
-        resultado := FileSeek(arq, ((j * dpb.BytesPerSector)), 0, retorno);
-        i := FileBlockRead(arq, vetor, 127);
+        resultado := FileSeek(arq, ((j * dpb.BytesPerSector) div 2), 0, retorno);
+        i := FileBlockRead(arq, vetor, 255);
+        writeln(resultado, ' i: ',i);
         write(j,'->');
 
-        for i := 0 to 127 do
+        for i := 0 to 255 do
             write(vetor[i]);
 
         writeln;

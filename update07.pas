@@ -13,21 +13,21 @@
 * Encoding.
 * }
 
-program update06;
+program update07;
 
 {$H+}
 
 const
 	tamanhonomearquivo = 40;
-	tamanhototalbuffer = 127; (* Mas é possível reduzir o buffer para 94.*)
+	tamanhototalbuffer = 255;
 	tamanhodiretorio = 87;
-	max = 8200;
-	porlinha = 16;
+	max = 9000;
+	porlinha = 36;
 
 type
 	absolutepath = string[tamanhodiretorio];
 	filename = string[tamanhonomearquivo];
-	buffervector = string[tamanhototalbuffer];
+	buffervector = string;
 	registerfile = file;
 	hashfile = file;
 	textfile = text;
@@ -42,14 +42,15 @@ var
 	arquivotexto: textfile;
 	arquivoregistros: registerfile;
 	arquivohashes: hashfile;
- 	nomedoexecutavel, temporario: buffervector;
- 	entradadocomando: array [1..3] of buffervector;
+ 	nomedoexecutavel, temporario: filename;
+    vetorbuffer: string;
+ 	entradadocomando: array [1..3] of filename;
  	nomearquivotexto, nomearquivoregistros, nomearquivohashes: filename;
  	vetorregistros: registervector;
  	b, modulo, maximo: integer;
  	parametro: byte;
  	caractere: char;
- 	
+
 procedure abrearquivotexto (nomearquivotexto: filename);
 begin
 	assign(arquivotexto,nomearquivotexto);
@@ -59,13 +60,13 @@ end;
 procedure abrearquivoregistros (nomearquivoregistros: filename);
 begin
 	assign(arquivoregistros,nomearquivoregistros);
-	rewrite(arquivoregistros);
+	rewrite(arquivoregistros, 127);
 end;
 
 procedure abrearquivohashes (nomearquivohashes: filename);
 begin
 	assign(arquivohashes,nomearquivohashes);
-	rewrite(arquivohashes,512);
+	rewrite(arquivohashes, tamanhototalbuffer + 1);
 end;
 
 procedure fechaarquivotexto;
@@ -134,13 +135,13 @@ procedure learquivotexto;
 var
 	i, j: integer;
 	caractere: char;
-	vetorbuffer: buffervector;
 	temporarionomearquivo: filename;
 	temporariodiretorio: absolutepath;
+    vetorbuffer: string;
 		
 begin
-	i := 1;
-	fillchar(vetorbuffer,tamanhototalbuffer,byte( ' ' ));
+    vetorbuffer := ' ';
+    i := 1;
 	while not eof(arquivotexto) do
 	begin
 		{ Le o arquivo texto }
@@ -166,22 +167,19 @@ begin
 end;
 
 procedure geraarquivohashes (maximo: integer);
-const
-    topo = 2047;
 var
 	i, j, k, l, m, hash, proximohash, contador, retorno: integer;
-	vetorbuffer: array[0..topo] of char;
 	hashemtexto, temporario1, temporario2, temporario3, temporario4: string[7];
-	
+	vetorbuffer: array[0..tamanhototalbuffer] of char;
 begin
 { Joga num arquivo separado o hash }
 {	
 	writeln('b: ',b,' modulo: ',modulo,' maximo: ',maximo);
-  	writeln(vetorbuffer);
+   	writeln(vetorbuffer);
 }	
 { Joga num arquivo separado o hash }	
-{ Como o arquivo trabalha com registros de 128 bytes (arquivo sem tipo), 
-  vamos colocar 6 hashes por registro } 
+{ Como o arquivo trabalha com registros de 512 bytes (arquivo sem tipo), 
+  vamos colocar 31 hashes por registro } 
 { Uma mudanca aqui e introduzir a compressao RLE. A ideia e reduzir o 
   tamanho do vetor a ser lido. Logo, ao lado de cada hash teremos um 
   caracter que marca quantas vezes ele se repete. Logo, 35g significa 
@@ -190,13 +188,15 @@ begin
 	i := 1;
 	j := 1;
 	hashemtexto := ' ';
-	repeat 
-		fillchar(vetorbuffer,topo,byte( ' ' ));
+	repeat
+        fillchar(vetorbuffer, sizeof(vetorbuffer), byte ( ' ' ));
         k := 1;
         l := 1;
+        vetorbuffer[0] := '#';
+        vetorbuffer[l] := '#';
 		while (k <= porlinha) do
 		begin
-			contador := 0;
+            contador := 0;
 			if j < maximo then
 			begin
 				hash := vetorregistros[j].hash;
@@ -209,34 +209,32 @@ begin
 			end
 			else
 				hash := 0;
-			fillchar(hashemtexto,length(hashemtexto),byte( ' ' ));
+			fillchar(hashemtexto, sizeof(hashemtexto), byte( ' ' ));
 			str(hash,hashemtexto);
-			hashemtexto := concat(hashemtexto, chr(contador + 64),',');
+			hashemtexto := concat(hashemtexto, chr (contador + 64), ',');
 
-            for m := 1 to length(hashemtexto) do
+            for m := 1 to (7 - pos(',',hashemtexto)) do
             begin
-                vetorbuffer[l] := hashemtexto[m];
                 l := l + 1;
+                vetorbuffer[l] := '0';
             end;
-            
-            for m := l to topo do
-                vetorbuffer[m] := ' ';
+
+            for m := 1 to pos(',',hashemtexto) do
+            begin
+                l := l + 1;
+                vetorbuffer[l] := hashemtexto[m];
+            end;
 
 			j := j + contador;
 			k := k + 1;
 		end;
-        
-        vetorbuffer[l] := 'x';
-        
-        seek(arquivohashes,i);
-		blockwrite(arquivohashes,vetorbuffer,1,retorno);
+
+		seek(arquivohashes, i);
+		blockwrite(arquivohashes, vetorbuffer, 1, retorno);
+		i := i + 1;
 {
-		writeln('maximo: ',maximo,' i: ',i,' j: ',j);
-        for m := 1 to 511 do
-            write(vetorbuffer);
-        writeln;
+		writeln('maximo: ',maximo,' i: ',i,' j: ',j,' vetorbuffer: ',vetorbuffer);
 }
-        i := i + 1;
 	until j >= maximo;
 { Grava no arquivo de hashes, na posicao 0, o valor de b, o modulo, }
 { o numero maximo de entradas e o numero maximo de registros }
@@ -249,15 +247,15 @@ begin
 	temporario4:=' ';
 	fillchar(temporario1,length(temporario4),byte( ' ' ));
 	vetorbuffer:=' ';
-	fillchar(vetorbuffer,length(vetorbuffer),byte( ' ' ));
+	fillchar(vetorbuffer,sizeof(vetorbuffer),byte( ' ' ));
 	str(b,temporario1);
 	str(modulo,temporario2);
 	str(maximo,temporario3);
 	str(i,temporario4);
-	insert('0',temporario1,1);
-    vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',',temporario4,',');
+	vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',',temporario4,',');
  	seek(arquivohashes,0);
 	blockwrite(arquivohashes,vetorbuffer,1,retorno);
+
 end;
 
 procedure quicksort(var vetor: registervector; comeco, fim: integer);
@@ -301,22 +299,26 @@ end;
 procedure gravaarquivoregistros (vetorregistros: registervector; fim: integer);
 var
 	i, retorno: integer;
-	vetorbuffer: buffervector;
 	hashemtexto: string[5];
+    vetorbuffer: string[127];
 begin
-	hashemtexto:='';
-	vetorbuffer:='';
+	hashemtexto:=' ';
+	vetorbuffer:=' ';
 	for i:=1 to fim do
 	begin
 	{	Transformar todo o conteudo do registro em uma string. }
 	{	Hash vira texto. }
 		str(vetorregistros[i].hash,hashemtexto);
 	{ 	Zera a variavel, enche de espacos em branco. } 
-		fillchar(vetorbuffer,tamanhototalbuffer,Byte( ' ' ));
+		SetString(vetorbuffer, ' ', 127);
 	{ Coloca o tamanho da string no primeiro byte (0) }	
-    {   vetorbuffer[0] := #0;   }
+{		vetorbuffer[0] := #0;
+* }
 	{ Monta a string que sera salva. }
 		vetorbuffer:=concat(hashemtexto,',',vetorregistros[i].nomearquivo,',',vetorregistros[i].diretorio,',');
+
+        insert('#', vetorbuffer, 1);
+        
 	{ Grava no arquivo de registros. }
 		blockwrite(arquivoregistros,vetorbuffer,1,retorno);
 	end;
@@ -352,6 +354,10 @@ begin
 end;	
 
 BEGIN
+    SetLength(vetorbuffer, tamanhototalbuffer);
+    SetLength(nomedoexecutavel, tamanhototalbuffer);
+    SetLength(temporario, tamanhototalbuffer);
+
 	parametro := 0;
 	for b := 1 to 3 do
 		entradadocomando[b] := paramstr(b);
@@ -459,7 +465,7 @@ BEGIN
 
 		if caractere = 'P' then
 			writeln('Grava arquivo com vetor de entradas');
-			
+
 		gravaarquivoregistros(vetorregistros,maximo);
 
 		if caractere = 'P' then

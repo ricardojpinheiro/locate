@@ -35,21 +35,28 @@ program popolony2k;
 var 
     arq : byte;
     i : byte;
-    retorno, j : integer;
+    inicio, fim, retorno, j : integer;
     resultado, fechou: boolean;
     nomearquivo: TFileName;
-    vetor: TString;
+    vetor : Array[0..511] Of Char;
 
 BEGIN
-    nomearquivo := 'teste.txt';
+    nomearquivo := 'A.hsh';
     arq := FileOpen(nomearquivo,'r');
-    writeln('Abriu:',arq);
-    for j := 0 to 3 do
+    writeln('Abriu: ',arq);
+    writeln('Inicio: '); readln(inicio);
+    writeln('Fim: '); readln(fim);
+    writeln;
+
+    for j := inicio to fim do
     begin
-        fillchar(vetor, length(vetor), byte( ' ' ));
-        resultado := FileSeek(arq, j, 0, retorno);
-        i := FileBlockRead(arq, vetor, 127);
-        writeln(vetor,' -> ',i,' ',j, ' ',retorno);
+        for i := 0 to 511 do
+            vetor[i] := ' ';
+        resultado := FileSeek(arq, ( j * SizeOf( vetor ) ), 0, retorno);
+        i := FileBlockRead(arq, vetor, 511);
+        write('j: ', j, ' -> ');
+        for i := 0 to 511 do
+            write(vetor[i]);
         writeln;
     end;
     fechou := FileClose(arq);
