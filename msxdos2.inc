@@ -1,13 +1,17 @@
 (*<msxdos2.pas> CopyLeft (c) since 1995 by PopolonY2k. *)
 Const
+    ctOpenFileHandle                = $43;
 	ctCreateFileHandle              = $44;
 	ctCloseFileHandle               = $45;
-	ctDuplicateFileHandle           = $47;
 	ctEnsureFileHandle              = $46;
-	ctMoveFileHandle                = $54;
-	ctOpenFileHandle                = $43;
-	ctReadFromFileHandle            = $48;
+    ctDuplicateFileHandle           = $47;
+    ctReadFromFileHandle            = $48;
 	ctWriteToFileHandle             = $49;
+    ctMoveFileHandlePointer         = $4A;
+	ctMoveFileHandle                = $54;
+    ctGetPreviousErrorCode          = $65;
+    ctExplainErrorCode              = $66;
+    ctGetMSXDOSVersionNumber        = $6F;
 
 (* The struct representing the MSXDOS version number. *)
 Type TMSXDOSVersion = Record

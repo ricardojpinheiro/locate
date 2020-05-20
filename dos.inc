@@ -3,22 +3,24 @@
 (* BDOS/MSXDOS functions list - Official function names *)
 
 Const
-	ctClose                	= $10;
-	ctCreate               	= $16;
-	ctDelete               	= $13;
-        ctOpen                 	= $0F;
-        ctRename               	= $17;
-	ctCreateFileHandle     	= $44;
-	ctCloseFileHandle      	= $45;
-	ctDuplicateFileHandle  	= $47;
-	ctEnsureFileHandle     	= $46;
-	ctMoveFileHandle       	= $54;
-	ctOpenFileHandle       	= $43;
-	ctReadFromFileHandle   	= $48;
-	ctWriteToFileHandle    	= $49;
-	ctMoveFileHandlePointer         = $4A;
-	ctGetMSXDOSVersionNumber        = $6F;
+    ctOpen                 	        = $0F;
+	ctClose                	        = $10;
+	ctDelete               	        = $13;
+	ctCreate               	        = $16;
+    ctRename               	        = $17;
+    ctOpenFileHandle                = $43;
+	ctCreateFileHandle              = $44;
+	ctCloseFileHandle               = $45;
+	ctEnsureFileHandle              = $46;
+    ctDuplicateFileHandle           = $47;
+    ctReadFromFileHandle            = $48;
+	ctWriteToFileHandle             = $49;
+    ctMoveFileHandlePointer         = $4A;
+	ctMoveFileHandle                = $54;
+    ctGetPreviousErrorCode          = $65;
+    ctExplainErrorCode              = $66;
 	ctGetEnvironmentItem            = $6B;
+	ctGetMSXDOSVersionNumber        = $6F;
 
 Type TMSXDOSVersion = Record
   nKernelMajor,

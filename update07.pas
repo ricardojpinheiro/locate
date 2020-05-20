@@ -60,7 +60,7 @@ end;
 procedure abrearquivoregistros (nomearquivoregistros: filename);
 begin
 	assign(arquivoregistros,nomearquivoregistros);
-	rewrite(arquivoregistros, 127);
+	rewrite(arquivoregistros, 128);
 end;
 
 procedure abrearquivohashes (nomearquivohashes: filename);
@@ -163,7 +163,8 @@ begin
 		vetorregistros[i].hash := calculahash(temporarionomearquivo);
 		i := i + 1;
 	end;
-	maximo := i;
+    j := i mod 4;
+	maximo := i + (4 - j);
 end;
 
 procedure geraarquivohashes (maximo: integer);
@@ -299,7 +300,7 @@ end;
 procedure gravaarquivoregistros (vetorregistros: registervector; fim: integer);
 var
 	i, retorno: integer;
-	hashemtexto: string[5];
+	hashemtexto, numeracao: string[5];
     vetorbuffer: string[127];
 begin
 	hashemtexto:=' ';
@@ -308,19 +309,22 @@ begin
 	begin
 	{	Transformar todo o conteudo do registro em uma string. }
 	{	Hash vira texto. }
-		str(vetorregistros[i].hash,hashemtexto);
+		str(vetorregistros[i].hash, hashemtexto);
 	{ 	Zera a variavel, enche de espacos em branco. } 
-		SetString(vetorbuffer, ' ', 127);
+		fillchar(vetorbuffer, sizeof(vetorbuffer), Byte ( ' ' ));
 	{ Coloca o tamanho da string no primeiro byte (0) }	
-{		vetorbuffer[0] := #0;
-* }
+		vetorbuffer[0] := #0;
 	{ Monta a string que sera salva. }
-		vetorbuffer:=concat(hashemtexto,',',vetorregistros[i].nomearquivo,',',vetorregistros[i].diretorio,',');
+        
+        str(i, numeracao);
+        
+		vetorbuffer:=concat(numeracao, ',',hashemtexto, ',', vetorregistros[i].nomearquivo, ',', vetorregistros[i].diretorio, ',');
 
         insert('#', vetorbuffer, 1);
         
 	{ Grava no arquivo de registros. }
-		blockwrite(arquivoregistros,vetorbuffer,1,retorno);
+        seek(arquivoregistros, i);
+		blockwrite(arquivoregistros, vetorbuffer, 1, retorno);
 	end;
 end;
 
@@ -450,17 +454,14 @@ BEGIN
 		
 		if caractere = 'P' then
 			writeln('Le arquivo texto');
-			
 		learquivotexto;
 
 		if caractere = 'P' then
 			writeln('Fecha arquivo texto');
-			
 		fechaarquivotexto;
 		
 		if caractere = 'P' then		
 			writeln('Ordena vetor de entradas');
-			
 		quicksort(vetorregistros,1,maximo);
 
 		if caractere = 'P' then
