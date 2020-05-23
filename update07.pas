@@ -43,7 +43,7 @@ var
 	arquivoregistros: registerfile;
 	arquivohashes: hashfile;
  	nomedoexecutavel, temporario: filename;
-    vetorbuffer: string;
+    vetorbuffer: string[tamanhototalbuffer];
  	entradadocomando: array [1..3] of filename;
  	nomearquivotexto, nomearquivoregistros, nomearquivohashes: filename;
  	vetorregistros: registervector;
@@ -60,7 +60,7 @@ end;
 procedure abrearquivoregistros (nomearquivoregistros: filename);
 begin
 	assign(arquivoregistros,nomearquivoregistros);
-	rewrite(arquivoregistros, 128);
+	rewrite(arquivoregistros, tamanhototalbuffer + 1);
 end;
 
 procedure abrearquivohashes (nomearquivohashes: filename);
@@ -171,7 +171,7 @@ procedure geraarquivohashes (maximo: integer);
 var
 	i, j, k, l, m, hash, proximohash, contador, retorno: integer;
 	hashemtexto, temporario1, temporario2, temporario3, temporario4: string[7];
-	vetorbuffer: array[0..tamanhototalbuffer] of char;
+	vetorbuffer: string[tamanhototalbuffer];
 begin
 { Joga num arquivo separado o hash }
 {	
@@ -190,11 +190,10 @@ begin
 	j := 1;
 	hashemtexto := ' ';
 	repeat
-        fillchar(vetorbuffer, sizeof(vetorbuffer), byte ( ' ' ));
+        for k := 1 to tamanhototalbuffer do
+            vetorbuffer[k] := ' ';
         k := 1;
         l := 1;
-        vetorbuffer[0] := '#';
-        vetorbuffer[l] := '#';
 		while (k <= porlinha) do
 		begin
             contador := 0;
@@ -210,8 +209,7 @@ begin
 			end
 			else
 				hash := 0;
-			fillchar(hashemtexto, sizeof(hashemtexto), byte( ' ' ));
-			str(hash,hashemtexto);
+			str(hash, hashemtexto);
 			hashemtexto := concat(hashemtexto, chr (contador + 64), ',');
 
             for m := 1 to (7 - pos(',',hashemtexto)) do
@@ -253,8 +251,8 @@ begin
 	str(modulo,temporario2);
 	str(maximo,temporario3);
 	str(i,temporario4);
-	vetorbuffer := concat(temporario1,',',temporario2,',',temporario3,',',temporario4,',');
- 	seek(arquivohashes,0);
+	vetorbuffer := concat(temporario1, ',', temporario2, ',', temporario3, ',', temporario4, ',');
+    seek(arquivohashes,0);
 	blockwrite(arquivohashes,vetorbuffer,1,retorno);
 
 end;
@@ -301,19 +299,20 @@ procedure gravaarquivoregistros (vetorregistros: registervector; fim: integer);
 var
 	i, retorno: integer;
 	hashemtexto, numeracao: string[5];
-    vetorbuffer: string[127];
+    vetorbuffer: string[tamanhototalbuffer];
 begin
 	hashemtexto:=' ';
 	vetorbuffer:=' ';
+    
+    fillchar(vetorbuffer, tamanhototalbuffer, ' ');
+    
 	for i:=1 to fim do
 	begin
 	{	Transformar todo o conteudo do registro em uma string. }
 	{	Hash vira texto. }
 		str(vetorregistros[i].hash, hashemtexto);
 	{ 	Zera a variavel, enche de espacos em branco. } 
-		fillchar(vetorbuffer, sizeof(vetorbuffer), Byte ( ' ' ));
-	{ Coloca o tamanho da string no primeiro byte (0) }	
-		vetorbuffer[0] := #0;
+		fillchar(vetorbuffer, tamanhototalbuffer, ' ');
 	{ Monta a string que sera salva. }
         
         str(i, numeracao);
@@ -321,6 +320,10 @@ begin
 		vetorbuffer:=concat(numeracao, ',',hashemtexto, ',', vetorregistros[i].nomearquivo, ',', vetorregistros[i].diretorio, ',');
 
         insert('#', vetorbuffer, 1);
+
+	{ Coloca o tamanho da string no primeiro byte (0) }	
+		vetorbuffer[0] := chr(length(vetorbuffer));
+
         
 	{ Grava no arquivo de registros. }
         seek(arquivoregistros, i);
@@ -330,10 +333,9 @@ end;
 
 procedure helpdocomando;
 begin
-	writeln(' Uso: ',nomedoexecutavel,' <parametros> <tipo> <nome do arquivo>.');
+	writeln(' Uso: ',nomedoexecutavel,' <parametros> <nome do arquivo>.');
 	writeln(' Atualiza a base de dados do locate.');
 	writeln;
-	writeln(' Tipo: Origem do arquivo gerado, se e Windows ou Linux/Unix.');
 	writeln(' Nome do arquivo: Arquivo que contem a lista no qual');
 	writeln(' a base de dados do locate se baseia.');
 	writeln;
@@ -347,7 +349,7 @@ end;
 
 procedure versaodocomando;
 begin
-	writeln(nomedoexecutavel,' (locate) 0.6'); 
+	writeln(nomedoexecutavel,' (locate) 0.9'); 
 	writeln('Copyright (c) 2020 Brazilian MSX Crew.');
 	writeln('Alguns direitos reservados.');
 	writeln('Este software e distribuido segundo a licenca GPL.');

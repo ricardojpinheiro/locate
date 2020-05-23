@@ -1,98 +1,149 @@
-{
-   teste de leitura popolony2k.pas
-   
-   Copyright 2020 Ricardo Jurczyk Pinheiro <ricardo@aragorn>
-   
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-   
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.
-   
-   
-}
+Program TESTDOS2FILE;
 
-program popolony2k;
-
-{$i d:memory.inc}
 {$i d:types.inc}
-{$i d:dos.inc}
+{$i d:memory.inc}
+{$i d:msxdos.inc}
+{$i d:msxdos2.inc}
 {$i d:dos2file.inc}
+{$i d:dos2err.inc}
 {$i d:dpb.inc}
 
-const
-    tamanho = 2047;
+{$r+}
+{$v+}
 
-var 
-    arq : byte;
-    i : byte;
-    inicio, fim: integer;
-    retorno, j : integer;
-    resultado, fechou: boolean;
-    nomearquivo: TFileName;
-    vetor : Array[0..tamanho] Of Char; 
-(*    vetor : string[tamanho];  *)
-(**)
-        dpb: TDPB;
-        nDrive: Byte;
-    
-BEGIN
-    nomearquivo := 'A.hsh';
-    arq := FileOpen(nomearquivo,'r');
+Var
+      nFileHandle     : Byte;
+      nErrorCode      : Byte;
+      strErrorMSg     : TMSXDOSString;
+      strFileName     : TFileName;
+      nBufferSize     : Integer;
+      nRecord         : Integer;
+      nNewPos         : Integer;
+      aBuffer         : array[0..255] of byte;
+      pData           : Pointer;
+      nCount          : Integer;
+      nRead           : Integer;
+      bEOF            : Boolean;
+      bODEGA          : Boolean;
+      bUNDA           : string[8];
+      bATATA          : string[8];
+      bOLA            : char;
+      i, j, k         : integer;
 
-    nDrive := 0;
-    if (GetDPB(nDrive, dpb) = ctError ) then
-    begin
-        writeln('Erro ao obter o DPB');
-        halt;
-    end;
-    
-    for i:=0 to tamanho do
-        vetor[i] := ' ';
-{      
-    with dpb do
-    begin
-        writeln('DPB: ');
-        writeln('Numero do drive: ',DrvNum);
-        writeln('Formato do disco: ', DiskFormat);
-        writeln('Bytes por setor: ', BytesPerSector);
-        writeln('Lados do disco: ', DiskSides);
-        writeln('Setores por cluster: ',SectorsbyCluster);
-        writeln('Setores reservados: ',ReservedSectors);
-        writeln('Numero de FATs: ',FATCount);
-        writeln('Entradas de diretorio: ',DirectoryEntries);
-        writeln('Clusters no disco: ',DiskClusters);
-        writeln('Setores por FAT: ',SectorsByFAT);
-    end;
+Begin
+  ClrScr;
+
+  strFileName := 'd:\q.dat';
+  nBufferSize := SizeOf( aBuffer );
+  nRecord     := 1;
+  nFileHandle := FileOpen( strFileName, 'rw' );
+  {pData       := Ptr( Addr( aBuffer ) );}
+  bEOF        := False;
+
+  If( nFileHandle In [ctInvalidFileHandle,
+                      ctInvalidOpenMode] )  Then
+  Begin
+    nErrorCode := GetLastErrorCode;
+
+    GetErrorMessage( nErrorCode, strErrorMsg );
+    WriteLn( strErrorMsg );
+    Exit;
+  End;
+
+  While( Not bEOF ) Do
+  Begin
+    Write( 'Current Record -> ', nRecord, ' Type new record number ' );
+    ReadLn( nRecord );
+
+    FillChar( aBuffer, SizeOf( aBuffer ), ' ' );
+
+    bODEGA := FileSeek( nFileHandle, 0, ctSeekSet, nNewPos );
+
+    For nCount := 1 To nRecord Do
+      If( Not FileSeek( nFileHandle,
+                        ( nBufferSize {* nRecord} ),
+                        ctSeekCur,
+                        nNewPos ) ) Then
+      Begin
+        nErrorCode := GetLastErrorCode;
+
+        GetErrorMessage( nErrorCode, strErrorMsg );
+        WriteLn( strErrorMsg );
+        Exit;
+      End;
+
+    nRead := FileBlockRead( nFileHandle, aBuffer, nBufferSize );
+
+    If( nRead = ctReadWriteError )  Then
+    Begin
+       nErrorCode := GetLastErrorCode;
+
+       GetErrorMessage( nErrorCode, strErrorMsg );
+       WriteLn( strErrorMsg );
+       bEOF := True;
+    End;
+
+    aBuffer[0] := ord('0');
+    aBuffer[1] := ord('0');
+
+    For nCount := 2 To ( nBufferSize - 1 ) Do
+    Begin
+        bOLA := Char(aBuffer[nCount]);
+        aBuffer[nCount - 2] := ord(bOLA);
+    End;
+
+    For nCount := 0 To ( nBufferSize - 1 ) Do
+        Write(Char(aBuffer[nCount]));
+    WriteLn;
+{    
+    for nCount := 0 to ( nBufferSize - 2 ) do
+        bUNDA[nCount] := chr(32);
 }
-    writeln('Abriu: ',arq);
-    writeln('Inicio: '); readln(inicio);
-    writeln('Fim: '); readln(fim);
-    writeln;
+    bOLA := ' ';    
+    writeln('nCount: ');
+    readln(nCount);
+   
+        i := 0;
+        while bOLA <> ',' do
+        begin
+            bOLA := chr(aBuffer[(i + 7 * (nCount - 1))]);
 
-    for j := inicio to fim do
-    begin
-        resultado := FileSeek(arq, ((j * dpb.BytesPerSector) div 2), 0, retorno);
-        i := FileBlockRead(arq, vetor, 255);
-        writeln(resultado, ' i: ',i);
-        write(j,'->');
+            writeln('bOLA: ',bOLA, ' i: ',i, ' (i + 7 * (nCount - 1)): ', (i + 7 * (nCount - 1)));
 
-        for i := 0 to 255 do
-            write(vetor[i]);
+            bUNDA[i + 1] := bOLA;
+            i := i + 1;
+        end;
+{
+        writeln('bUNDA: ', bUNDA);
+        writeln('total: ', i);
+}
+        j := i;
+{
+        writeln('virgula: ', j);
+}        
+        bOLA := bUNDA[i - 1];
+{
+        writeln('bOLA: ', bOLA);
+        writeln('length(bUNDA): ', length(bUNDA));
+}
+        delete(bUNDA, i - 1, length(bUNDA));
+{
+        writeln('bUNDA nova: ', bUNDA);
+}        
+        val(bUNDA, k, nCount);
 
-        writeln;
-    end;
-    
-    fechou := FileClose(arq);
-	writeln('Fechou');
-	
-END.
+        writeln('j: ',j, ' Hash em texto: ', bUNDA, ' Letra: ', bOLA, ' Hash: ',k);
+        
+    WriteLn( 'Record ( ', nRecord, ' ) READ -> ', nRead, ' NEWPOS ', nNewPos );
+
+    {nPosition := Succ( nPosition );}
+  End;
+
+  If( Not FileClose( nFileHandle ) )  Then
+  Begin
+    nErrorCode := GetLastErrorCode;
+    GetErrorMessage( nErrorCode, strErrorMsg );
+    WriteLn( strErrorMsg );
+  End;
+
+End.
