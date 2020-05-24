@@ -3,8 +3,8 @@
 Esta é um utilitário para MSX cujo objetivo é funcionar de forma semelhante ao locate do Linux. Ele requer MSX-DOS 2, e a saída está formatada (a princípio) para 80 colunas. O código está escrito em Turbo Pascal, e está liberado segundo a GPL.
 
 ## Os links rápidos.
-- [Última versão do programa para fazer o update](update08.pas)
-- [Última versão do programa que faz a localização](locate08.pas)
+ - [Última versão do programa para fazer o update](update08.pas)
+ - [Última versão do programa que faz a localização](locate08.pas)
 
 ## Algumas explicações.
 A ideia é que a lista seja feita em um computador IBM-PC compatível, que tem poder de processamento de sobra para gerá-la. O MSX fará a consulta na mesma.
@@ -14,10 +14,10 @@ Logo, há um programa, chamado `update`, que gerará a lista. E o programa `loca
 Há um script em shell (Bash), chamado `updatedbmsx.sh`, que cria os arquivos-texto para que o update crie os arquivos. 
 
 A sintaxe é updatedbmsx.sh (caminho do diretório a ser indexado). Logo, o parâmetro que você deve passar é o caminho para o diretório inicial. Nesse diretório, deveremos ter diretórios, onde cada uma será uma partição do cartão SD. Se o seu cartão SD tiver 2 partições, coloque 2 pastas dentro dessa pasta, e o script entenderá que serão os drives A e B. Se você quiser ter 4 drives (A, B, C e D), crie 4 pastas e coloque os arquivos assim dispostos. Lembre-se que o A será o primeiro (na ordenação por nome), logo recomendo que você crie assim: 
-- - 1_diretorio-1.
-- - 2_diretorio-2.
-- - 3_diretorio-3.
-- - 4_diretorio-4.
+ - 1_diretorio-1.
+ - 2_diretorio-2.
+ - 3_diretorio-3.
+ - 4_diretorio-4.
 
 O script executa os seguintes passos:
  - Monta toda a listagem, já trocando os caminhos "padrão Unix" para "padrão MS(X)-DOS". Este é um processo um pouco lento, o que me surpreendeu.
@@ -35,9 +35,9 @@ O update será executado no PC. O programa pega a base de dados que está no arq
 A execução do update deve ser feita a partir do script que gera a lista inicial e a entrega já arrumada pro programa gerar os arquivos. É possível executar separadamente, usando `update <arquivo texto>` . Se você apenas executar o `update`, ele apresentará o resultado.
 
 #### Parâmetros do update.
-- /h ou /help - Apresenta um texto de ajuda e sai.
-- /v ou /version - Apresenta a versão do comando, algumas notas de versão e sai.
-- /p ou /prolix - Informa tudo o que o programa está fazendo. É o modo *verbose*.
+ - /h ou /help - Apresenta um texto de ajuda e sai.
+ - /v ou /version - Apresenta a versão do comando, algumas notas de versão e sai.
+ - /p ou /prolix - Informa tudo o que o programa está fazendo. É o modo *verbose*.
  
 ### Sobre o locate.
 Esta explicação também está no cabeçalho do programa, então lá vai:
@@ -78,7 +78,10 @@ Ah, tem muitas coisas ainda a serem mexidas. Segue a lista:
 - Se aumentarmos o tamanho de cada registro para 512 bytes, o arquivo de hashes poderá ter até 72 entradas por registro (no momento temos 36). O processo de leitura seria abreviado pela metade.
 
 ### No utilitário locate:
-- - Parâmetro riscado lá em cima - será possível fazer com que ele execute o comando cd para já colocar o prompt no diretório onde aquele arquivo está.
+- Parâmetro riscado lá em cima - será possível fazer com que ele execute o comando cd para já colocar o prompt no diretório onde aquele arquivo está.
+- Reconhecer se estamos rodando com 40 ou 80 colunas, e formatar o documento dessa forma.
+- Traduzir todas as mensagens para inglês. Aliás, prever a internacionalização de software é uma boa ideia... Para o futuro.
+
 #### Otimização
 - Ao ler um "registrão" de 512 bytes, teria que fazer a busca dentro desse registrão pra saber qual das 4 entradas contém a entrada desejada. 
 - Aumentando a densidade de entradas por registro no arquivo de hashes, ganhamos em desempenho.
@@ -87,8 +90,8 @@ Ah, tem muitas coisas ainda a serem mexidas. Segue a lista:
 > E a pergunta que não quer calar: **Quando eu vou fazer isso?** Já aviso: *Não será agora*. Esse código tem sido um grande aprendizado para mim, mas agora eu quero parar e investir em coisas novas. Quando eu tiver paciência, eu volto e faço essas alterações. Ou então você mesmo pode fazer, aifnal das contas, é código aberto, né? :-D
 
 #### Extras que são necessários:
-- - Eu tenho um script pronto para fazer o trabalho sujo no Linux. Preciso de um script para fazer a mesma coisa no Windows. **Não, eu não sei Powershell, e nem uso Windows**, a não ser quando quero que entre um ar na minha casa. :-D Logo, vou precisar da ajuda de alguém. 
-- - Já houve uma sugestão de fundir o script com o `update` e fazer um programa só em outra linguagem, como Python, por exemplo. Seria ótimo... Se eu soubesse Python. Entendam que eu fiz em Pascal porque é a linguagem que eu sei, e **eu não vou aprender uma linguagem nova de programação somente para resolver um problema**. Claro que eu não desprezo Python, pelo contrário, concordo com a afirmação de que *Python vai salvar o mundo. Ainda não sabemos como, mas que vai, vai!* Mas minha prioridade é o MSX.
+- Eu tenho um script pronto para fazer o trabalho sujo no Linux. Preciso de um script para fazer a mesma coisa no Windows. **Não, eu não sei Powershell, e nem uso Windows**, a não ser quando quero que entre um ar na minha casa. :-D Logo, vou precisar da ajuda de alguém. 
+- Já houve uma sugestão de fundir o script com o `update` e fazer um programa só em outra linguagem, como Python, por exemplo. Seria ótimo... Se eu soubesse Python. Entendam que eu fiz em Pascal porque é a linguagem que eu sei, e **eu não vou aprender uma linguagem nova de programação somente para resolver um problema**. Claro que eu não desprezo Python, pelo contrário, concordo com a afirmação de que *Python vai salvar o mundo. Ainda não sabemos como, mas que vai, vai!* Mas minha prioridade é o MSX.
 
 #### Futuro:
 Tudo isso que você está vendo deve estar disponível quando a versão inicial ficar pronta. Agora, as seguintes podem demorar:
