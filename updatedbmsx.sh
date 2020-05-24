@@ -30,7 +30,7 @@ fi
 TEMPORARIO=$(mktemp)
 TEMP2=$(mktemp)
 ARQUIVO=$(mktemp)
-UPDATE="./update06"
+UPDATE="./update.linux"
 CP=$(which cp)
 DIRETORIO_ORIGINAL=$1
 QUANTOS_DIRETORIOS=$(find $DIRETORIO_ORIGINAL -maxdepth 1 -type d | sed -n '2,$p' | wc -l)
