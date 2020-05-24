@@ -33,7 +33,7 @@ Var
 Begin
   ClrScr;
 
-  strFileName := 'd:\q.dat';
+  strFileName := 'a:\utils\locate\db\m.dat';
   nBufferSize := SizeOf( aBuffer );
   nRecord     := 1;
   nFileHandle := FileOpen( strFileName, 'rw' );

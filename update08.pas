@@ -1,5 +1,5 @@
 { 
-   update07.pas
+   update.pas
    
    Copyright 2020 Ricardo Jurczyk Pinheiro <ricardo@aragorn>
 *  
@@ -13,7 +13,7 @@
 * Encoding.
 * }
 
-program update07;
+program update;
 
 {$H+}
 
@@ -60,7 +60,7 @@ end;
 procedure abrearquivoregistros (nomearquivoregistros: filename);
 begin
 	assign(arquivoregistros,nomearquivoregistros);
-	rewrite(arquivoregistros, tamanhototalbuffer + 1);
+	rewrite(arquivoregistros, tamanhototalbuffer);
 end;
 
 procedure abrearquivohashes (nomearquivohashes: filename);
@@ -205,6 +205,7 @@ begin
 				begin
 					contador := contador + 1;
 					proximohash := vetorregistros[j + contador].hash;
+                    if contador > 189 then break;
 				end;
 			end
 			else
@@ -298,8 +299,8 @@ end;
 procedure gravaarquivoregistros (vetorregistros: registervector; fim: integer);
 var
 	i, retorno: integer;
-	hashemtexto, numeracao: string[5];
-    vetorbuffer: string[254];
+	hashemtexto, numeracao: string[8];
+    vetorbuffer: string[tamanhototalbuffer];
 begin
 	hashemtexto:=' ';
 	vetorbuffer:=' ';
@@ -310,16 +311,18 @@ begin
 		str(vetorregistros[i].hash, hashemtexto);
 	{ 	Zera a variavel, enche de espacos em branco. } 
 		fillchar(vetorbuffer, sizeof(vetorbuffer), Byte ( ' ' ));
-	{ Coloca o tamanho da string no primeiro byte (0) }	
-		vetorbuffer[0] := #0;
-	{ Monta a string que sera salva. }
+ 	{ Monta a string que sera salva. }
         
         str(i, numeracao);
         
-		vetorbuffer:=concat(numeracao, ',',hashemtexto, ',', vetorregistros[i].nomearquivo, ',', vetorregistros[i].diretorio, ',');
+		vetorbuffer := concat(numeracao, ',', hashemtexto, ',', vetorregistros[i].nomearquivo, ',', vetorregistros[i].diretorio, '%');
 
         insert('#', vetorbuffer, 1);
-        
+
+	{ Coloca o tamanho da string no primeiro byte (0) }	
+
+		vetorbuffer[0] := chr(length(vetorbuffer));
+
 	{ Grava no arquivo de registros. }
         seek(arquivoregistros, i);
 		blockwrite(arquivoregistros, vetorbuffer, 1, retorno);

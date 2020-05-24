@@ -24,14 +24,13 @@ program locate;
     
 const
     TamanhoBuffer = 255;
+    TamanhoString = 255;
     TamanhoNomeArquivo = 40;
-    TamanhoTotalBuffer = 255;
     TamanhoDiretorio = 127;
     MaximoRegistros = 8700;
     HashesPorLinha = 36;
 
 type
-    BufferVector = string[TamanhoBuffer];
     Registro = record
         hash: integer;
         NomeDoArquivo: string[TamanhoNomeArquivo];
@@ -51,28 +50,30 @@ var
     letra: char;
     
 (*  Usado pelas rotinas que verificam a versão do MSX-DOS e a letra de drive. *)
-    VersaoMSXDOS : TMSXDOSVersion;
+    VersaoMSXDOS: TMSXDOSVersion;
     Registros: TRegs;
     LetraDeDrive: char;
     
 (*  Vetores, de hashes e de parâmetros.  *)    
     VetorHashes: HashVector;
-    VetorParametros: array [1..4] of TFileName;
+    VetorParametros: array [1..4] of string[TamanhoNomeArquivo];
     HashEmTexto, TemporarioNumero: string[8];
     Ficha: Registro;
 
 (*  Inteiros. *)
     Posicao, Tamanho, Tentativas, Acima, Abaixo, RetornoDoVal: integer;
-    LimiteDeBuscas: integer;
+    LimiteDeBuscas, comeco, fim: integer;
     i, j, b, ModuloDoHash, TotalDeRegistros, HashTemporario: integer;
     hash, contador: integer;
 
 (*  Caracteres. *)
     Caractere, PrimeiraLetra: char;
 
-(*  O buffer usado para leitura dos arquivos. *)
-    vetorbuffer: array[0..TamanhoBuffer] of byte;
+(*  O buffer usado para leitura de dados nos arquivos. *)
+    Buffer: array[0..TamanhoBuffer] of byte;
+    frase: string[TamanhoString];
     pesquisa, temporario: TFileName;
+    fimdoarquivo: boolean;
 
 (* Função que localiza a ultima ocorrencia de um caractere numa string. *)
 
@@ -98,19 +99,20 @@ end;
 procedure BuscaBinariaNomeDoArquivo (hash, fim: integer; var Posicao, Tentativas: integer);
 var
     comeco, meio: integer;
-    encontrou: boolean;
+    Encontrou: boolean;
     
 begin
     comeco		:=	1;
     Tentativas	:=	1;
     fim			:=	TotalDeRegistros;
-    encontrou	:=	false;
-    while (comeco <= fim) and (encontrou = false) do
+    Encontrou	:=	false;
+
+    while (comeco <= fim) and (Encontrou = false) do
     begin
         meio:=(comeco + fim) div 2;
 
         if (hash = VetorHashes[meio]) then
-            encontrou := true
+            Encontrou := true
         else
             if (hash < VetorHashes[meio]) then
                 fim := meio - 1
@@ -118,7 +120,7 @@ begin
                 comeco := meio + 1;
         Tentativas := Tentativas + 1;
     end;
-    if encontrou = true then
+    if Encontrou = true then
         Posicao := meio;
 end;
 
@@ -128,12 +130,12 @@ end;
 procedure CodigoDeErro (SaiOuNao: boolean);
 var
     NumeroDoCodigoDeErro: byte;
-    MensagemDeErro     : TMSXDOSString;
+    MensagemDeErro: TMSXDOSString;
     
 begin
     NumeroDoCodigoDeErro := GetLastErrorCode;
-    GetErrorMessage( NumeroDoCodigoDeErro, MensagemDeErro );
-    WriteLn( MensagemDeErro );
+    GetErrorMessage (NumeroDoCodigoDeErro, MensagemDeErro);
+    WriteLn (MensagemDeErro);
     if SaiOuNao = true then
         Exit;
 end;
@@ -142,15 +144,12 @@ end;
 
 procedure LeFichaNoArquivoRegistros (Posicao: integer; var Ficha: Registro);
 var
-    lidos, contador: integer;
-    inicio, fim: integer;
-    fimdoarquivo: boolean;
-    frase: string[TamanhoBuffer];
+    lidos: integer;
 
 begin
-    RetornoDoVal:=0;
-    HashEmTexto:='';
-    fillchar(vetorbuffer, sizeof (vetorbuffer), ' ' );
+    RetornoDoVal := 0;
+    HashEmTexto := ' ';
+    fillchar(Buffer, sizeof (Buffer), ' ' );
     fillchar(frase, sizeof (frase), ' ' );
 
 (*  Aponta para o início do arquivo. *)
@@ -162,53 +161,55 @@ begin
             CodigoDeErro (true);
 
 (*  Lê o registro desejado. *)
-    ResultadoBlockRead := FileBlockRead(ArquivoRegistros, vetorbuffer, TamanhoBuffer);
+    ResultadoBlockRead := FileBlockRead(ArquivoRegistros, Buffer, TamanhoBuffer);
 
-    contador := 1; 
+    contador := 0; 
 
 (*  Localiza início e fim do registro, e apaga o que sobra. *)
     
     while letra <> '#' do
     begin
-        letra := char(vetorbuffer[contador]);
+        letra := char(Buffer[contador]);
         contador := contador + 1;
     end;
     
-    inicio := contador;
+    comeco := contador;
     contador := TamanhoBuffer;
     
-    while letra <> ',' do
+    while letra <> '%' do
     begin
-        letra := char(vetorbuffer[contador]);
+        letra := char(Buffer[contador]);
         contador := contador - 1;
     end;
     
     fim := contador + 1; 
+
     delete(frase, 1, TamanhoBuffer);
 
 (*  Copia para uma string, setando o tamanho na posição 0. *)
 
-    for contador := inicio to fim do
+    for contador := comeco to fim do
     begin
-        letra := char(vetorbuffer[contador]);
+        letra := char(Buffer[contador]);
         frase:= concat(frase, letra);
     end;
-    frase[0] := char(fim - inicio);
+    frase[0] := char(fim - comeco);
 
 (* Copia o diretorio e apaga o que nao sera usado *)
-    Ficha.Diretorio := copy(frase, LastPos(',', frase), TamanhoBuffer);
-    delete(frase, LastPos(',', frase) - 1, TamanhoBuffer);
+    Ficha.Diretorio := copy(frase, LastPos(',', frase), TamanhoString);
+    delete(frase, LastPos(',', frase) - 1, TamanhoString);
 
 (* Copia o nome do arquivo e apaga o que nao sera usado *)
-    Ficha.NomeDoArquivo := copy(frase, LastPos(',', frase), TamanhoBuffer);
-    delete(frase, LastPos(',', frase) - 1, TamanhoBuffer);
+    Ficha.NomeDoArquivo := copy(frase, LastPos(',', frase), TamanhoString);
+    delete(frase, LastPos(',', frase) - 1, TamanhoString);
 
 (* Copia o hash do nome do arquivo e apaga o que nao sera usado *)      
     fillchar(HashEmTexto, length(HashEmTexto), byte( ' ' ));
-    HashEmTexto := copy(frase, LastPos(',', frase), TamanhoBuffer);
-    delete(frase, LastPos(',', frase) - 1, TamanhoBuffer);
+    HashEmTexto := copy(frase, LastPos(',', frase), TamanhoString);
+    delete(frase, LastPos(',', frase) - 1, TamanhoString);
     val(HashEmTexto, hash, RetornoDoVal);
     Ficha.hash := hash;
+
 end;
 
 (*  Calcula o hash de um padrao. *)
@@ -219,9 +220,9 @@ var
     a, hash2: real;
     
 begin
-    hash:=0;
-    hash2:=0.0;
-    for i:=1 to length(Padrao) do
+    hash := 0;
+    hash2 := 0.0;
+    for i := 1 to length(Padrao) do
     begin
 (*  A funcao CalculaHash nao pode ser usada com reais e e preciso usar
     reais porque o valor e muito grande para trabalhar com inteiros.
@@ -240,7 +241,6 @@ end;
 procedure LeArquivoDeHashes(hash, Tamanho, TotalDeRegistros: integer);
 var
     registros, entradas, posicao, linha, repeticoes: integer;
-    fimdoarquivo: boolean;
     SizeBuffer: integer;
     HashEmTexto: string[8];
     
@@ -249,13 +249,13 @@ begin
     entradas := 0;
     HashEmTexto := ' ';
     fimdoarquivo := false;
-    SizeBuffer := sizeof(vetorbuffer);
+    SizeBuffer := sizeof(Buffer);
     fillchar(VetorHashes, sizeof (VetorHashes), 0);
 
 (*  Enquanto o arquivo não fecha, faça isto. *)
 	while ( not fimdoarquivo ) do
     begin
-        fillchar(vetorbuffer, sizeof (vetorbuffer), ' ' );
+        fillchar(Buffer, sizeof (Buffer), ' ' );
 
 (*  Posiciona no início do arquivo. *)
         ResultadoSeek := FileSeek (ArquivoHashes, 0, ctSeekSet, NovaPosicao);
@@ -264,7 +264,7 @@ begin
         for contador := 1 to linha do
             if not (FileSeek (ArquivoHashes, SizeBuffer, ctSeekCur, NovaPosicao)) then
                 CodigoDeErro (true);
-        ResultadoBlockRead := FileBlockRead (ArquivoHashes, vetorbuffer, SizeBuffer);
+        ResultadoBlockRead := FileBlockRead (ArquivoHashes, Buffer, SizeBuffer);
 
 (*  Trata o erro no MSX-DOS 2.*)        
         if (ResultadoBlockRead = ctReadWriteError) then
@@ -274,14 +274,14 @@ begin
         end;
 
 (*  Tem q zerar esses 2 primeiros registros pra não dar problema. *)
-        vetorbuffer[0] := ord('0');
-        vetorbuffer[1] := ord('0');
+        Buffer[0] := ord('0');
+        Buffer[1] := ord('0');
 
 (*  Damos um chega pra cá no vetor. *)        
         for posicao := 2 to (SizeBuffer - 1) do
         begin
-            letra := Char(vetorbuffer[posicao]);
-            vetorbuffer[posicao - 2] := ord(letra);
+            letra := Char(Buffer[posicao]);
+            Buffer[posicao - 2] := ord(letra);
         end;
 
 (*  Vasculharemos todo o arquivo para pegar os hashes. *)
@@ -295,7 +295,7 @@ begin
             fillchar(HashEmTexto, sizeof(HashEmTexto), ' ' );
             while letra <> ',' do
             begin
-                letra := chr(vetorbuffer[(contador + 7 * (posicao - 1))]);
+                letra := chr(Buffer[(contador + 7 * (posicao - 1))]);
                 HashEmTexto[contador + 1] := letra;                
                 contador := contador + 1;
             end;
@@ -373,7 +373,7 @@ begin
     repeat
         HashEmTexto := concat(HashEmTexto, letra);
         contador := contador + 1;
-        letra := chr(vetorbuffer[contador]);
+        letra := chr(Buffer[contador]);
     until letra = ',';
     
     HashEmTexto[0] := char(length(HashEmTexto));
@@ -387,8 +387,6 @@ BEGIN
     LimiteDeBuscas := 0;
     temporario := ' ';
 
-    clrscr;
-
 (*  Testa se está rodando no MSX-DOS 2. Se sim, então vai ler a variável
 *   de ambiente LOCATEDB. Senão... Tchau.*)
 
@@ -401,12 +399,12 @@ BEGIN
     end
     else 
         begin
-            fillchar(Caminho, TamanhoTotalBuffer, byte( ' ' ));
+            fillchar(Caminho, TamanhoString, byte( ' ' ));
             temporario[0] := 'l';
             temporario[1] := 'o';
             temporario[2] := 'c';
             temporario[3] := 'a';
-            temporario[4] := 'l';
+            temporario[4] := 't';
             temporario[5] := 'e';
             temporario[6] := 'd';
             temporario[7] := 'b';
@@ -425,31 +423,25 @@ BEGIN
             LetraDeDrive := Caminho[0];
             insert(LetraDeDrive, Caminho, 1);
         end;
-        
-    if Caminho = '' then Caminho := 'a:\utils\locale\db\'; 
 
-(* Tirar isso na versão final. *)   
-   Caminho := 'd:\';
-(*******************************************************)
-(*******************************************************)
-(*******************************************************)
+    if (Registros.HL > 0) then Caminho := 'a:\utils\locate\db\'; 
 
 (*  Parametros a serem lidos. *)
-    for b := 1 to 4 do
-        VetorParametros[b] := paramstr(b);
+    for i := 1 to 4 do
+        VetorParametros[i] := paramstr(i);
 
 (* Sem parametros o comando entrega o help. *)
     if paramcount = 0 then LocateAjuda;
 
 (* Antes de tratar os parametros, passa tudo para maiusculas. *)
-    for j := 1 to 3 do
+    for i := 1 to 3 do
     begin
-        temporario := paramstr(j);
+        temporario := paramstr(i);
         if pos('/',temporario) <> 0 then
-            parametro := j;
-        for b := 1 to length(temporario) do
-            temporario[b] := upcase(temporario[b]);
-        VetorParametros[j] := temporario;
+            parametro := i;
+        for j := 1 to length(temporario) do
+            temporario[j] := upcase(temporario[j]);
+        VetorParametros[i] := temporario;
     end;
 
 (* Com um parametro. Se for o /h ou /help, apresenta o help.    *)  
@@ -469,17 +461,22 @@ BEGIN
         val(VetorParametros[parametro + 1], LimiteDeBuscas, RetornoDoVal);
         LimiteDeBuscas := LimiteDeBuscas - 1;
     end;
-    
-    for b := 1 to 2 do
-        if pos('.',VetorParametros[b]) <> 0 then parametro := b;
 
-(*  O 1o parametro e o nome a ser pesquisado. *)
-(*  Aqui definimos qual será o arquivo a ser lido. *)
-(*******************************************************)
-(*Aqui temos que prever se o arquivo nao comecar com nenhuma letra. *)
-(*******************************************************)
-    pesquisa := VetorParametros[parametro];
-    PrimeiraLetra := upcase(pesquisa[1]);
+(*  O 1o parametro e o nome a ser pesquisado.       *)
+(*  Aqui definimos qual será o arquivo a ser lido.  *)
+
+    pesquisa := paramstr(1);
+    for i := 1 to length(pesquisa) do
+        pesquisa[i] := upcase(pesquisa[i]);
+    PrimeiraLetra := pesquisa[1];
+
+(*  Se o parametro 1 nao for o arquivo, entao da um erro. *)
+
+    If PrimeiraLetra = '/' then LocateAjuda;
+
+(*  Se a primeira letra não for de A a Z, troca para 0. *)
+
+    if (not (PrimeiraLetra in ['A'..'Z'])) then PrimeiraLetra := '0';
     
     fillchar(NomeArquivoRegistros, sizeof(NomeArquivoRegistros), byte( ' ' ));
     fillchar(NomeArquivoHashes, sizeof(NomeArquivoHashes), byte( ' ' ));
@@ -488,6 +485,15 @@ BEGIN
     
     NomeArquivoRegistros := concat(Caminho, PrimeiraLetra, '.dat');
     NomeArquivoHashes := concat(Caminho, PrimeiraLetra, '.hsh');
+
+    for j := 1 to length(NomeArquivoRegistros) do
+        NomeArquivoRegistros[j] := upcase(NomeArquivoRegistros[j]);
+
+    for j := 1 to length(NomeArquivoHashes) do
+        NomeArquivoHashes[j] := upcase(NomeArquivoHashes[j]);
+
+(*  Se o parametro passado for H, V, S, P ou C, limpa a tela. *)
+    if (Caractere in ['H', 'V', 'S', 'P', 'C']) then clrscr;
 
 (* Abre os arquivos de registros e de hashes *)
     if Caractere = 'P' then fastwriteln('Abre arquivo de registros');
@@ -499,12 +505,12 @@ BEGIN
 (* Testa se há algum problema com os arquivos. Se há, encerra. *)
     if (ArquivoRegistros in [ctInvalidFileHandle, ctInvalidOpenMode]) then CodigoDeErro (true);
     if (ArquivoHashes in [ctInvalidFileHandle, ctInvalidOpenMode]) then CodigoDeErro (true);
-    
+
 (* Le de um arquivo separado o hash *)
-(* Na posicao 0 temos b, modulo, o máximo de entradas e o numero de linhas. *)
-    fillchar(vetorbuffer, TamanhoBuffer, byte( ' ' ));
+(* Na posicao 0 temos b, modulo, o número de entradas e o número de registros. *)
+    fillchar(Buffer, TamanhoBuffer, byte( ' ' ));
     ResultadoSeek := FileSeek (ArquivoHashes, 0, ctSeekSet, NovaPosicao);
-    ResultadoBlockRead := FileBlockRead (ArquivoHashes, vetorbuffer, TamanhoBuffer);
+    ResultadoBlockRead := FileBlockRead (ArquivoHashes, Buffer, TamanhoBuffer);
 
 (*  Aqui, pegamos os dados do vetor de bytes. *)
     contador := 0;
@@ -514,40 +520,17 @@ BEGIN
 
     BuscaAteAVirgula;
     val(HashEmTexto, ModuloDoHash, RetornoDoVal);
-    
+
     BuscaAteAVirgula;
     val(HashEmTexto, TotalDeRegistros, RetornoDoVal);
-    
+
     BuscaAteAVirgula;
     val(HashEmTexto, Tamanho, RetornoDoVal);
-
-(*******************************************************)
-(*Essa rotina tem q ser melhorada aqui. *)
-(*******************************************************)
-    if Caractere = 'S' then
-    begin
-        temporario := concat('Arquivo com os registros: ', NomeArquivoRegistros);
-        fastwriteln(temporario);
-        temporario := concat('Arquivo com os hashes: ', NomeArquivoHashes);
-        fastwriteln(temporario);
-        str(b, HashEmTexto);
-        temporario := concat('b: ', HashEmTexto);
-        fastwriteln(temporario);
-        str(ModuloDoHash, HashEmTexto);
-        temporario := concat('Modulo do hash: ', HashEmTexto);
-        fastwriteln(temporario);
-        str(Tamanho, HashEmTexto);
-        temporario := concat('Tamanho: ', HashEmTexto, ' registros.');
-        fastwriteln(temporario);
-        str(TotalDeRegistros, HashEmTexto);
-        temporario := concat('Numero de linhas: ',HashEmTexto);
-        fastwriteln(temporario);
-    end;
-    
+   
     if Caractere = 'P' then
     begin
-        str(Tamanho, HashEmTexto);
-        temporario := concat('Tamanho: ', HashEmTexto, ' registros.');
+        str(TotalDeRegistros, HashEmTexto);
+        temporario := concat('Numero de registros: ', HashEmTexto, ' registros.');
         fastwriteln(temporario);
     end;
 
@@ -560,7 +543,35 @@ BEGIN
         
 (* Calcula o hash do nome da pesquisa *)
     hash := CalculaHash(pesquisa);
-    
+
+(*  Estatísticas. *)
+
+    if Caractere = 'S' then
+    begin
+        temporario := concat('Arquivo com os registros: ', NomeArquivoRegistros);
+        fastwriteln(temporario);
+        temporario := concat('Arquivo com os hashes: ', NomeArquivoHashes);
+        fastwriteln(temporario);
+        str(b, HashEmTexto);
+        temporario := concat('Multiplicador para o hash: ', HashEmTexto);
+        fastwriteln(temporario);
+        str(ModuloDoHash, HashEmTexto);
+        temporario := concat('Modulo do hash: ', HashEmTexto);
+        fastwriteln(temporario);
+        str(Tamanho, HashEmTexto);
+        temporario := concat('Grupos de registros: ', HashEmTexto);
+        fastwriteln(temporario);
+        str(TotalDeRegistros, HashEmTexto);
+        temporario := concat('Numero de registros: ', HashEmTexto);
+        fastwriteln(temporario);
+        temporario := concat('Nome a ser pesquisado: ', pesquisa);
+        fastwriteln(temporario);
+        str(hash, HashEmTexto);
+        temporario := concat('Hash do nome pesquisado: ', HashEmTexto);
+        fastwriteln(temporario);
+        exit;
+    end;
+
     if Caractere = 'P' then
     begin
         str(hash, HashEmTexto);
@@ -573,8 +584,7 @@ BEGIN
     LeArquivoDeHashes(hash, Tamanho, TotalDeRegistros);
     
 (* Faz a busca binaria no vetor *)
-    if Caractere = 'P' then
-        fastwriteln('Faz busca.');
+    if Caractere = 'P' then fastwriteln('Faz busca.');
     BuscaBinariaNomeDoArquivo(hash, TotalDeRegistros, Posicao, Tentativas);
  
 (* Tendo a posicao certa, le o registro e verifica se o nome bate. *)
@@ -582,6 +592,14 @@ BEGIN
 (*  Ou entao, diz que nao tem aquele nome no arquivo *)
     if Posicao <> 0 then
     begin
+        if Caractere = 'P' then 
+        begin
+            fastwriteln('Arquivo encontrado.');
+            str(Posicao, HashEmTexto);
+            temporario := concat('Posicao: ', HashEmTexto);
+            fastwriteln(temporario);
+        end;
+        
         j := Posicao;
         HashTemporario := hash;
 
@@ -608,6 +626,7 @@ BEGIN
             str(((Acima - Abaixo) + 1), HashEmTexto);
             temporario := concat('Numero de entradas encontradas: ', HashEmTexto);
             fastwriteln(temporario);
+            exit;
         end;
                 
         if Caractere = 'L' then Acima := Abaixo + LimiteDeBuscas;
@@ -616,7 +635,7 @@ BEGIN
         for j := Abaixo to Acima do
         begin
             LeFichaNoArquivoRegistros (j, Ficha);
-            if CalculaHash(pesquisa) = CalculaHash(Ficha.NomeDoArquivo) then
+            if pesquisa = Ficha.NomeDoArquivo then
             begin
                 if Caractere = 'P' then
                 begin
@@ -624,7 +643,7 @@ BEGIN
                     str(Tentativas, TemporarioNumero);
                     temporario := concat('Posicao: ', HashEmTexto,' Tentativas: ', TemporarioNumero,
                     ' Nome do arquivo: ', Ficha.NomeDoArquivo, ' Diretorio: ', Ficha.Diretorio);
-                    fastwriteln(temporario);
+                    writeln(temporario);
                 end
                 else
                     begin
