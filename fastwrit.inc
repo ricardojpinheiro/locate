@@ -1,3 +1,9 @@
+Type
+    FibName = Array[0..12] Of Char;
+    
+var 
+    MsxIoResult: byte;
+
 Procedure WriteVram (VramBlockUsed: Byte; VramAddr,RamAddr,ByteCount:Integer);
 Var
 	Expansion, AddrHi, AddrMid, AddrLo: Byte;
@@ -14,6 +20,22 @@ Begin
       	$40/$D3/$99/$2A/ RamAddr /$ED/$4B/ ByteCount /$7E/$D3/$98/$23/$0B/$79/
       	$B0/$20/$F7/ $F3/$3e/ 0  /$D3/$99/$3E/$2D/$F6/$80/$D3/$99
         );
+End;
+
+Procedure ChDrv (drive: byte);
+begin
+   MsxIoResult := Bdos($0E, drive)
+end;
+
+Procedure ChDir (DirName: TString);
+Var
+    Fn : FibName;
+     i : Byte;
+Begin
+    For i := 1 To Length(DirName) Do
+        Fn[i-1] := DirName[i];
+    Fn[i] := Chr(0);
+    Inline($0E/$5A/$11/ Fn /$CD/$05/0/$32/MsxIoResult);
 End;
 
 Procedure FastWriteln (St : TString);

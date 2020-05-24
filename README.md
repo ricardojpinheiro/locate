@@ -1,6 +1,6 @@
 ﻿
 # locate
-Esta é um utilitário para MSX cujo objetivo é funcionar de forma semelhante ao locate do Linux. Ele requer MSX-DOS 2, e a saída está formatada (a princípio) para 80 colunas. O código está escrito em Turbo Pascal, e está liberado segundo a GPL.
+Este é um utilitário para MSX cujo objetivo é funcionar de forma semelhante ao locate do Linux. Ele requer MSX-DOS 2, e a saída está formatada (a princípio) para 80 colunas. O código está escrito em Turbo Pascal, e está liberado segundo a GPL.
 
 ## Os links rápidos.
  - [Última versão do programa para fazer o update](update08.pas)
@@ -44,7 +44,7 @@ Esta explicação também está no cabeçalho do programa, então lá vai:
 Você passa um padrão de pesquisa e eventualmente um parâmetro. Ele lê o arquivo de hashes correspondente, joga para um vetor na memória e faz a busca. Ele passa o padrão para maiúsculas, calcula o hash desse padrão, faz busca binária no vetor. Caso ele ache, ele procura o registro equivalente no arquivo de registros e entrega o resultado na saída padrão (a tela). Caso ocorram colisões (mais e um arquivo com o mesmo hash), ele faz uma busca sequencial no vetor para procurar as entradas idênticas e as imprime na tela também.
 
 #### Parâmetros do locate.
- - /a ou /change    - ~~Muda para o diretório onde o arquivo está~~.
+ - /a ou /change    - Muda para o diretório onde o arquivo está.
  - /c ou /count     - Mostra quantas entradas foram encontradas.
  - /h ou /help      - Traz este texto de ajuda e sai.
  - /l n ou /limit n - Limita a saída para n entradas.

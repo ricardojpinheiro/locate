@@ -328,7 +328,7 @@ begin
     fastwriteln(' Padrao: Padrao a ser buscado no banco de dados.');
     fastwriteln(' ');
     fastwriteln(' Parametros: ');
-    fastwriteln(' /a ou /change    - Muda para o Diretorio onde o arquivo esta.');
+    fastwriteln(' /a ou /change    - Muda para o diretorio onde o arquivo esta.');
     fastwriteln(' /c ou /count     - Mostra quantas entradas foram encontradas.');
     fastwriteln(' /h ou /help      - Traz este texto de ajuda e sai.');
     fastwriteln(' /l n ou /limit n - Limita a saida para n entradas.');
@@ -354,9 +354,7 @@ begin
     fastwriteln('de dados. Ele nao faz buscas em nomes incompletos ou em');
     fastwriteln('diretorios. Ele tambem so faz uso de um parametro por vez.');
     fastwriteln('No futuro, teremos o uso de dois ou mais parametros, ');
-    fastwriteln('faremos a busca em nomes incompletos, diretorios e sera ');
-    fastwriteln('possivel executar o comando CD para o diretorio onde o ');
-    fastwriteln('arquivo esta.');
+    fastwriteln('faremos a busca em nomes incompletos e diretorios. ');
     fastwriteln(' ');
     fastwriteln('Configuracao: ');
     fastwriteln('O banco de dados do locate esta em a:\UTILS\LOCATE\DB.');
@@ -656,6 +654,14 @@ BEGIN
     end
         else
             fastwriteln('Arquivo nao encontrado.');
+    
+    if Caractere = 'A' then
+    begin
+        LetraDeDrive := Ficha.Diretorio[1];
+        Caminho := copy (Ficha.Diretorio, 3, TamanhoDiretorio);
+        ChDrv (ord(LetraDeDrive) - 65);
+        ChDir (caminho);
+    end;
 
 (* Fecha os arquivos *)
     if Caractere = 'P' then
