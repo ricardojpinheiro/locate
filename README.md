@@ -91,6 +91,7 @@ Ah, tem muitas coisas ainda a serem mexidas. Segue a lista:
 
 #### Extras que são necessários:
 - Eu tenho um script pronto para fazer o trabalho sujo no Linux. Preciso de um script para fazer a mesma coisa no Windows. **Não, eu não sei Powershell, e nem uso Windows**, a não ser quando quero que entre um ar na minha casa. :-D Logo, vou precisar da ajuda de alguém. 
+- Preciso compilar o update em uma máquina Windows, com o Free Pascal Compiler, e testar. Alguém disposto a ajudar? Como vocês sabem, *eu não uso Windows*, não pretendo usar e não vou instalar uma VM de Windows 7 só pra isso. Cai no mesmo problema do Python (que eu falo aí embaixo).
 - Já houve uma sugestão de fundir o script com o `update` e fazer um programa só em outra linguagem, como Python, por exemplo. Seria ótimo... Se eu soubesse Python. Entendam que eu fiz em Pascal porque é a linguagem que eu sei, e **eu não vou aprender uma linguagem nova de programação somente para resolver um problema**. Claro que eu não desprezo Python, pelo contrário, concordo com a afirmação de que *Python vai salvar o mundo. Ainda não sabemos como, mas que vai, vai!* Mas minha prioridade é o MSX.
 
 #### Futuro:
