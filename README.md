@@ -26,7 +26,7 @@ O script executa os seguintes passos:
  - Cria a pasta `A:\UTILS\LOCATE\DB` dentro da pasta que será o drive A, copia todos os arquivos para essa pasta.
  - Altera o AUTOEXEC.BAT do MSX, para setar uma variável de ambiente, a saber: `SET LOCATEDB=A:\UTILS\LOCATE\DB\`.
   
- No final, teremos 54 arquivos: 27 arquivos .DAT (0 e de A a Z), e 27 arquivos HSH (0 e de A a Z). Esses arquivos serão copiados para a pasta `a:\utils\locate\db`. Esta é a pasta padrão.
+ No final, teremos 54 arquivos: 27 arquivos .DAT (0 e de A a Z), e 27 arquivos HSH (0 e de A a Z). Esses arquivos serão copiados para a pasta `A:\UTILS\LOCATE\DB`. Esta é a pasta padrão.
 
 ## Um pouco mais de detalhes.
 
