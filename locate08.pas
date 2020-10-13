@@ -17,8 +17,8 @@ program locate;
 {$i d:types.inc}
 {$i d:memory.inc}
 {$i d:dos.inc}
-{$i d:dos2file.inc}
 {$i d:dos2err.inc}
+{$i d:dos2file.inc}
 {$i d:dpb.inc}
 {$i d:fastwrit.inc}
     
@@ -667,9 +667,7 @@ BEGIN
     if Caractere = 'P' then
         fastwriteln('Fecha arquivo.');
     
-    if (not FileClose(ArquivoRegistros)) then
-        CodigoDeErro(true);
-        
-    if (not FileClose(ArquivoHashes)) then
-        CodigoDeErro(true);
+    if (not FileClose(ArquivoRegistros)) then CodigoDeErro(true);
+    if (not FileClose(ArquivoHashes)) then CodigoDeErro(true);
+
 END.
