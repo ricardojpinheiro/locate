@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+#
+# A função deste script é fazer a listagem inicial dos arquivos e diretórios.
+# Logo, ele receberá um parâmetro, que é o caminho para o diretório inicial.
+# Nesse diretório inicial, deveremos ter diretórios, onde cada um será uma
+# partição do cartão SD. O script vai fazer a lista de diretórios, fazer a
+# listagem e montar o arquivo que o programa em Pascal (update06, no momento)
+# vai processar.
+#
+#DIRETORIO_ORIGINAL="/home/ricardo/Downloads/MSX/SD_CF_cartao"
+
+import os
+import sys
+import math
+# from pprint import pprint
+
+from argparse import ArgumentParser
+from pathlib import Path
+from io import StringIO
+
+
+__VERSION__ = '0.1'
+RECORDS_MAX = 36
+RLE_MAX = 189
+LINE_MAX = 36
+_b_ = 251
+modulo = 32749
+A_to_Z = [chr(ascii) for ascii in range(65, 91)]
+SEP = '\\'
+DEFAULT_DB = 'A:/UTILS/LOCATE/DB'
+locate_path = None
+path2drive = {}
+max = {}
+
+
+class DefaultList(list):
+    '''A list that returns a default element when out of bounds.'''
+
+    def __new__(cls, list):
+        return (list.__new__(cls, list))
+
+
+    def get(self, index, default):
+        if index < len(self):
+            return self[index]
+        return default
+
+
+def generate_hash(pattern: str) -> int:
+    hash = 0
+
+    for c in pattern:
+        a = hash * _b_ + ord(c)
+        hash = a - modulo * int(a / modulo)
+        hash = round(hash)
+
+    return hash
+
+
+def get_nearest_prime(num: int) -> int:
+    max = math.floor(math.sqrt(num))
+    factor = 2
+
+    while factor <= max:
+        if num % factor == 0:
+            num -= 1
+            max = math.floor(math.sqrt(num))
+            factor = 1
+        factor += 1
+    else:
+        prime = num
+
+    return prime
+
+
+def main():
+    global locate_path, _b_, modulo
+
+    parser = ArgumentParser(
+        prog='updatedbmsx',
+        description='%(prog)s updates locate\'s file database.',
+        epilog='To report bugs, suggestions, praise or criticism, ' +
+               'visit the site at <https://github.com/ricardojpinheiro/locate>.')
+
+    parser.add_argument('dir', help='base directory to sweep')
+    parser.add_argument('--db', '-d', dest='db_dir', action='store', type=str,
+                        help='path to database dir (defaults to "A:/UTILS/LOCATE/DB")')
+    parser.add_argument('-b', action='store', dest='b', type=int, help='define value of B '
+                        + 'constant (default: 251)')
+    parser.add_argument('--modulo', '-m', action='store', dest='modulo', type=int,
+                        help='define value of MODULO constant (default: 32749)')
+    parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + __VERSION__)
+
+    args = parser.parse_args(None if sys.argv[1:] else ['--help'])
+
+    if not Path(args.dir).exists():
+        sys.exit('%s not found' % args.dir)
+
+    if args.b:
+        _b_ = get_nearest_prime(args.b)
+
+    if args.modulo:
+        modulo = get_nearest_prime(args.modulo)
+
+    base = Path(args.dir)
+    drive = iter(A_to_Z)
+    locate_tuple = args.db_dir.upper().split(':') if args.db_dir else DEFAULT_DB.split(':')
+    storage = {}
+
+    if len(locate_tuple) < 2:
+        sys.exit('Invalid --db parameter')
+
+    if sys.version_info[0] < 3 or (sys.version_info[0] < 3 and sys.version_info[0] < 5):
+        sys.exit('updatedb requires at least Python 3.5, but Python %s.%s was found.'
+                % sys.version_info[0:2])
+
+    for prefix in ('0', *A_to_Z):
+        storage[prefix] = []
+
+    # Scan the partitions
+    for partition in sorted(filter(lambda d: d.is_dir(), base.glob('*'))):
+        drive_letter = next(drive)
+        if drive_letter == locate_tuple[0]:
+            locate_path = os.path.join(partition, locate_tuple[1].strip('/'))
+            os.makedirs(locate_path, exist_ok=True)
+        path2drive[partition.parts[1]] = drive_letter
+
+    if not locate_path:
+        sys.exit('Invalid --db parameter')
+
+    # Scan files in directories
+    for path in filter(lambda f: f.is_file(), base.rglob('*')):
+        # Skip own db files
+        if '/'.join(path.parts[0:-1]) == locate_path:
+            continue
+        fname = path.name.upper()
+        drive_letter = path2drive[path.parts[1]]
+        prefix = fname[0] if fname[0] in A_to_Z else '0'
+        element = (fname, '%s:%s%s' % (drive_letter, SEP,
+            SEP.join(path.parts[2:-1]).upper() if path.parts[2:-1] else ''),
+            generate_hash(fname))
+        storage[prefix].append(element)
+
+    # Reorder and pad storage space with 4-entry section
+    for n, letter in enumerate(storage):
+        storage[letter] = sorted(storage[letter], key=lambda x: x[2])
+        max[letter] = len(storage[letter]) + (4 - len(storage[letter]) % 4)
+        padding = DefaultList([('', '', 0)] * (max[letter] - len(storage[letter])))
+        padding.extend(storage[letter]) # section starts with padding
+        storage[letter] = padding
+        # pprint(storage[letter])
+
+    # Write .dat files
+    for letter in storage:
+        with open(os.path.join(locate_path, letter + '.dat'), 'wb') as dat_file:
+            for n, (fname, path, hash) in enumerate(storage[letter], start=1):
+                dat_file.write(b''.rjust(255, b'\0')) # Empty header
+                tmp = '#%i,%i,%s,%s%%' % (n, hash, fname, path)
+                line = chr(len(tmp)).encode('latin1') + tmp.encode('latin1')
+                line = line.ljust(255)
+                dat_file.write(line)
+
+    # Write .hsh files
+    for letter in storage:
+        with open(os.path.join(locate_path, letter + '.hsh'), 'wb+') as hash_file:
+            hash_file.write(b''.rjust(256)) # Skip header space
+            index = 0
+            blocks = 1
+
+            while index < max[letter]:
+                buffer = StringIO()
+                records = 0
+
+                while records < RECORDS_MAX:
+                    rle_count = 0
+                    _, _, hash = storage[letter].get(index, ('', '', 0))
+                    next_hash = hash
+                    if index < max[letter]:
+                        while hash == next_hash:
+                            rle_count += 1
+                            _, _, next_hash = storage[letter].get(index + rle_count,
+                                    default=('', '', 0))
+                            if rle_count > RLE_MAX:
+                                break
+                    else:
+                        hash = 0
+
+                    # Write single record to buffer
+                    print('%05d%s,' % (hash, chr(rle_count + 64)), end='', file=buffer)
+                    index += rle_count
+                    records += 1
+
+                # Write complete block
+                hash_file.write(b'\0 %s  ' % buffer.getvalue().encode('latin1'))
+                blocks += 1
+
+            # Write header after everything else
+            hash_file.seek(0)
+            line = b'%i,%i,%i,%i,' % (_b_, modulo, max[letter], blocks)
+            hash_file.write(b'%s%s' % (chr(len(line)).encode('latin1'), line))
+
+if __name__ == '__main__':
+    main();
