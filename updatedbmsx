@@ -16,7 +16,7 @@ import math
 
 from argparse import ArgumentParser
 from pathlib import Path
-from io import StringIO
+from io import BytesIO
 
 
 __VERSION__ = '0.1'
@@ -155,8 +155,8 @@ def main():
         with open(os.path.join(locate_path, letter + '.dat'), 'wb') as dat_file:
             for n, (fname, path, hash) in enumerate(storage[letter], start=1):
                 dat_file.write(b''.rjust(255, b'\0')) # Empty header
-                tmp = '#%i,%i,%s,%s%%' % (n, hash, fname, path)
-                line = chr(len(tmp)).encode('latin1') + tmp.encode('latin1')
+                tmp = b'#%i,%i,%s,%s%%' % (n, hash, bytes(fname, 'utf-8'), bytes(path, 'utf-8'))
+                line = b'%c%s' % (len(tmp), tmp)
                 line = line.ljust(255)
                 dat_file.write(line)
 
@@ -168,7 +168,7 @@ def main():
             blocks = 1
 
             while index < max[letter]:
-                buffer = StringIO()
+                buffer = BytesIO()
                 records = 0
 
                 while records < RECORDS_MAX:
@@ -186,18 +186,18 @@ def main():
                         hash = 0
 
                     # Write single record to buffer
-                    print('%05d%s,' % (hash, chr(rle_count + 64)), end='', file=buffer)
+                    buffer.write(b'%05d%c,' % (hash, rle_count + 64))
                     index += rle_count
                     records += 1
 
                 # Write complete block
-                hash_file.write(b'\0 %s  ' % buffer.getvalue().encode('latin1'))
+                hash_file.write(b'\0 %s  ' % buffer.getvalue())
                 blocks += 1
 
             # Write header after everything else
             hash_file.seek(0)
             line = b'%i,%i,%i,%i,' % (_b_, modulo, max[letter], blocks)
-            hash_file.write(b'%s%s' % (chr(len(line)).encode('latin1'), line))
+            hash_file.write(b'%c%s' % (len(line), line))
 
 if __name__ == '__main__':
     main();
