@@ -1,0 +1,4 @@
+/home/ricardo/MSX/Arquivos/SD/1_raiz,A:
+/home/ricardo/MSX/Arquivos/SD/2_jogos,B:
+/home/ricardo/MSX/Arquivos/SD/3_musica,C:
+/home/ricardo/MSX/Arquivos/SD/4_revistas,D:

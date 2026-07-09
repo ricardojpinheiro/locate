@@ -1,0 +1,51 @@
+locate novo:
+	Objetivo: Encontrar arquivos mais facilmente.
+	Estrutura de dados:
+		Hash, Drive, caminho, nome do arquivo.
+			Função hash - tem que gerar um valor único e ser rápida o bastante pra um Z80 gerar.
+	Gerado por um script em shell - gera a listagem e a ordena.
+		Parâmetros: Caminho e letra do drive.
+		Troca a / pela \, remove o caminho e insere a letra de drive.
+		Gera um arquivo texto.
+	Programa em Pascal - gera os hashes, ordena e salva.
+		Um arquivo para cada letra de drive.
+	Variável de ambiente.
+		LOCATEDB = localização do banco de dados - definir no AUTOEXEC.BAT.
+	Busca binária.
+		Procura pelo hash, pra cima e pra baixo, até o valor do hash ser diferente. Imprime na tela.
+	Parâmetros.
+x		/a - Imprime todos os nomes que foram encontrados.
+x		/c - Imprime quantos nomes foram encontrados.
+x		/ln - Pára em n buscas.
+x		/dn - Procura somente na letra de drive n.
+x		/s - Mostra estatísticas do banco de dados e sai.
+x		/w - Imprime nome, caminho com letra de drive e hash.
+x		/h - help
+x		/v - versão
+		sem parâmetros - Imprime nada.
+		
+CCD:
+	Objetivo: entrar em qualquer diretório, sem precisar digitar todo o caminho.
+	Estrutura de dados:
+		Terá que ter o hash de cada parte do caminho.
+		Hash, letra do drive e parte do caminho.
+	Gerado por um script em shell - gera a listagem e a ordena.
+		Parâmetros: Caminho e letra do drive.
+		Troca a / pela \, remove o caminho e insere a letra de drive.
+		Gera um arquivo texto.
+	Programa em Pascal - gera os hashes, ordena e salva.
+		Um arquivo para cada letra de drive?
+	Variável de ambiente.
+		CCDDB = localização do banco de dados - definir no AUTOEXEC.BAT.
+	Busca binária.
+		Procura pelo hash, pra cima e pra baixo, até o valor do hash ser diferente. Imprime na tela.
+	Parâmetros.
+		/c - Imprime quantos nomes foram encontrados.
+		/ln - Pára em n buscas.
+		/dn - Procura somente na letra de drive n.
+		/w - Lista todos os caminhos a serem encontrados, e exibe um menu, apertando um número pra ir pro diretório desejado.
+		/h - help
+		/v - versão
+		sem parâmetros - Muda pro primeiro diretório que encontrar.
+
+	Sugestão de código em Pascal pra olhar: https://github.com/deluan/dcd (DCD).
