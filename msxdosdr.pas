@@ -31,7 +31,7 @@ var
 	DriveLetter: Char;
 	i: Integer;
 	Registers: TRegs;
-	
+
 begin
 	FillChar (OriginalPath, 	SizeOf (OriginalPath)	, chr(32));
 	FillChar (szOriginalPath, 	SizeOf (szOriginalPath)	, chr(32));
@@ -39,7 +39,7 @@ begin
     DriveLetter: Char;
     i: Integer;
     Registers: TRegs;
-    
+
 begin
     FillChar (OriginalPath,     SizeOf (OriginalPath)   , chr(32));
     FillChar (szOriginalPath,   SizeOf (szOriginalPath) , chr(32));
@@ -98,68 +98,68 @@ end;
 (*
  * Changes the directory. It's a function because it returns the status byte.
  *)
- 
+
 function ChangeDirectory(Path: TString): Byte;
 var
 <<<<<<< HEAD
 	Parameters: String[ctMaxPath];
 	DriveLetter, i: Byte;
 	Registers: TRegs;
-	
+
 begin
 	DriveLetter := (ord( Copy (Path, 1, 1) ) - 65);
-	
+
 	with Registers do
 	begin
 		C := ctSetDrive;
 		E := DriveLetter;
 	end;
-	
+
 	MSXBDOS (Registers);
-	
+
 	FillChar(Parameters, 	ctMaxPath, chr(32));
-	
+
 	for i := 1 to Length(Path) do
 		Parameters[i - 1] := Path[i];
-	Parameters[i] := #0;	
-	
+	Parameters[i] := #0;
+
 	with Registers do
 	begin
 		C := ctChangeCurrentDir;
 		DE := addr (Parameters);
 	end;
-	MSXBDOS (Registers);	
-	
+	MSXBDOS (Registers);
+
 	ChangeDirectory := Registers.A;
 =======
     Parameters: String[ctMaxPath];
     DriveLetter, i: Byte;
     Registers: TRegs;
-    
+
 begin
     DriveLetter := (ord( Copy (Path, 1, 1) ) - 65);
-    
+
     with Registers do
     begin
         C := ctSetDrive;
         E := DriveLetter;
     end;
-    
+
     MSXBDOS (Registers);
-    
+
     FillChar(Parameters,    ctMaxPath, chr(32));
-    
+
     for i := 1 to Length(Path) do
         Parameters[i - 1] := Path[i];
-    Parameters[i] := #0;    
-    
+    Parameters[i] := #0;
+
     with Registers do
     begin
         C := ctChangeCurrentDir;
         DE := addr (Parameters);
     end;
-    MSXBDOS (Registers);    
-    
+    MSXBDOS (Registers);
+
     ChangeDirectory := Registers.A;
 >>>>>>> origin/main
 end;
@@ -175,11 +175,11 @@ var
 	DriveLetter: Char;
 	i: Integer;
 	Registers: TRegs;
-	
+
 begin
 	FillChar(Path, 			ctMaxPath, chr(32));
 	FillChar(Parameters, 	ctMaxPath, chr(32));
-	
+
 	for i := 1 to Length(EnvironmentVariable) do
 		Parameters[i - 1] := EnvironmentVariable[i];
 	Parameters[i] := #0;
@@ -188,16 +188,16 @@ begin
     DriveLetter: Char;
     i: Integer;
     Registers: TRegs;
-    
+
 begin
     FillChar(Path,          ctMaxPath, chr(32));
     FillChar(Parameters,    ctMaxPath, chr(32));
-    
+
     for i := 1 to Length(EnvironmentVariable) do
         Parameters[i - 1] := EnvironmentVariable[i];
     Parameters[i] := #0;
 >>>>>>> origin/main
-    
+
     Path[0] := #0;
 
     with Registers do
@@ -207,14 +207,14 @@ begin
         HL := addr ( Parameters );
         DE := addr ( Path );
     end;
-    
+
     MSXBDOS ( Registers );
-   
+
     DriveLetter := Path[0];
-    
+
     insert(DriveLetter, Path, 1);
-    
+
     GetPathFromEnvironmentVariable := Path;
-    
+
 end;
 
