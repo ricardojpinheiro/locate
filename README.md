@@ -4,11 +4,11 @@ Este é um utilitário para MSX cujo objetivo é funcionar de forma semelhante a
 
 ## Algumas explicações.
 
-A ideia é que a lista seja feita em um computador IBM-PC compatível, que tem poder de processamento de sobra para gerá-la. O MSX fará a consulta na mesma. Logo, há um programa, chamado updatedb.py (escrito em Python), que gerará a lista. E o programa locate fará a busca.
+A ideia é que a lista seja feita em um computador IBM-PC compatível, que tem poder de processamento de sobra para gerá-la. O MSX fará a consulta na mesma. Logo, há um programa, chamado `updatedb.py` (escrito em Python), que gerará a lista. E o programa locate fará a busca.
 
-## Sobre o updatedb.py.
+## Sobre o `updatedb.py`.
 
-Sintaxe: updatedb.py \<arquivo de configurações\>
+**Sintaxe**: `updatedb.py` \<arquivo de configurações\>
 
 Este script em Python criará os arquivos DAT que serão usados pelo locate no MSX para realizar a busca. Ele também cria os arquivos TXT, que não serão usados, podendo ser descartados pelo usuário.
 
@@ -16,46 +16,51 @@ Configuração: O \<arquivo de configurações\> deve seguir o seguinte formato:
 
 \<caminho completo até o diretório que será indexado\>,\<letra de drive\>
 
-Exemplo:
+**Exemplo:**
 
-/home/fulano/MSX/Arquivos/SD/DIVERSOS,A:
+`/home/fulano/MSX/Arquivos/SD/DIVERSOS,A:`
 
-/home/fulano/MSX/Arquivos/SD/JOGOS,B:
+`/home/fulano/MSX/Arquivos/SD/JOGOS,B:`
 
-/home/fulano/MSX/Arquivos/SD/MUSICA,C:
+`/home/fulano/MSX/Arquivos/SD/MUSICA,C:`
 
-/home/fulano/MSX/Arquivos/SD/MAGAZINE,D:
+`/home/fulano/MSX/Arquivos/SD/MAGAZINE,D:`
 
 Observação: Após a letra de drive, tem o : (dois pontos). Isto se repetirá para cada letra de drive.
 
 ## Configurações prévias no MSX
 
-No AUTOEXEC.BAT, crie uma variável de ambiente, chamada LOCATEDB, que deve apontar onde estão os arquivos de dados.
+No arquivo `AUTOEXEC.BAT`, crie uma variável de ambiente, chamada `LOCATEDB`, que deve apontar onde estão os arquivos de dados.
 
-Exemplo: SET LOCATEDB=A:\\UTILS\\LOCATE\\DB
+**Exemplo:** 
+`SET LOCATEDB=A:\UTILS\LOCATE\DB\`
 
-A variável de ambiente LOCATEDB apontará para o diretório A:\\UTILS\\LOCATE\\DB, e é lá que o locate vai procurar os arquivos.
+A variável de ambiente `LOCATEDB` apontará para o diretório A:\UTILS\LOCATE\DB, e é lá que o locate vai procurar os arquivos.
 
 ## Sobre o locate.
 
-Você passa um padrão de pesquisa e eventualmente um parâmetro. O locate pega a 1a letra desse padrão e vai buscar no arquivo correspondente (se for um número, está no arquivo NUM.DAT). Ele realiza a busca binária nesse arquivo, e caso ocorram colisões (mais de um arquivo com o mesmo hash), ele entrega o primeiro resultado que ele encontrou.
+Você passa um padrão de pesquisa e eventualmente um parâmetro. O locate pega a primeira letra desse padrão e vai buscar no arquivo correspondente (se for um número, está no arquivo NUM.DAT). Ele realiza a busca binária nesse arquivo, e caso ocorram colisões (mais de um arquivo com o mesmo hash), ele entrega o primeiro resultado que ele encontrou.
 
-Parâmetros do locate.
-
-/a  - Exibe todas as correspondências encontradas. /c  - Exibe a quantidade de correspondências encontradas. /dX - Exibe correspondências relacionadas à letra de unidade especificada (X). /f  - Exibe o nome do arquivo, o caminho e o hash. /ln - Para após n correspondências. /h  - Exibe esta ajuda e encerra. /v  - Exibe informações da versão e encerra.
-
-Sobre o código.
+## Parâmetros do locate.
+ 
+- /a - Exibe todas as correspondências encontradas.
+- /c - Exibe a quantidade de correspondências encontradas.
+- /dX - Exibe correspondências relacionadas à letra de unidade especificada (X).
+- /f  - Exibe o nome do arquivo, o caminho, o hash e em quantos passos ele encontrou o resultado.
+- /ln – Encerra a busca após n correspondências.
+- /h - Exibe esta ajuda e encerra.
+- /v  - Exibe informações da versão e encerra.
+ 
+## Sobre o código.
 
 Além de um bom tempo investido por mim, há a ajuda inestimável das bibliotecas em Pascal criadas pelos irmãos Lammassaari e pelo PopolonY2K. Os arquivos (enxugados, claro, o MSX não tem memória pra dar e vender) estão no repositório, e tem a extensão .PAS.
 
-Limitações do locate.
+## Limitações do locate.
 
-```
-Esse programa não faz buscas em nomes incompletos ou em diretórios. No momento, ele apenas faz busca por nomes exatos de arquivos no banco de dados.  
-Esse programa só permite o uso de um parâmetro por vez, na ordem determinada na ajuda do comando.
-```
+1. Esse programa não faz buscas em nomes incompletos ou em diretórios. No momento, ele apenas faz busca por nomes exatos de arquivos no banco de dados.  
+2. Esse programa só permite o uso de um parâmetro por vez, na ordem determinada na ajuda do comando.
 
-Desempenho.
+## Desempenho.
 
 No teste que tenho feito aqui, (4 diretórios, 76641 arquivos), o tempo varia em proporção direta ao tamanho do arquivo de hash. Logo, uma busca em arquivos que começam com Q (473 arquivos) são muito mais rápidos do que uma busca em arquivos que começam com M (8099 arquivos).
 
@@ -111,5 +116,5 @@ Busca em diretórios.
     Diminuição da quantidade de variáveis usadas, limpeza de constantes e tipos não usados (já fiz alguma coisa, mas farei melhor depois).
 ```
 
-Notas de versão. (c) 2020 Brazilian MSX Crew. Alguns direitos reservados, mas a licença é a GPL. Então... Obedeça-a. Mas aceito sugestões, correções, melhorias. Ideias são sempre bem-vindas. Mas críticas destrutivas, tipo "esse código tá uma bosta, faz em ASM de Z80 que é melhor" receberão de resposta um vai a m\* bem sonoro e serão remetidas para /dev/null.
+Notas de versão. (c) 2020-2026 Brazilian MSX Crew. Alguns direitos reservados, mas a licença é a GPL. Então... Obedeça-a. Mas aceito sugestões, correções, melhorias. Ideias são sempre bem-vindas. Mas críticas destrutivas, tipo "esse código tá uma bosta, faz em ASM de Z80 que é melhor" receberão de resposta um vai a m\* bem sonoro e serão remetidas para `/dev/null`.
 
