@@ -27,6 +27,7 @@ function GetCurrentDirectory: TFileName;
 var
     OriginalPath: String[ctMaxPath];
     szOriginalPath: array [0..ctMaxPath] of Byte;
+<<<<<<< HEAD
 	DriveLetter: Char;
 	i: Integer;
 	Registers: TRegs;
@@ -34,6 +35,15 @@ var
 begin
 	FillChar (OriginalPath, 	SizeOf (OriginalPath)	, chr(32));
 	FillChar (szOriginalPath, 	SizeOf (szOriginalPath)	, chr(32));
+=======
+    DriveLetter: Char;
+    i: Integer;
+    Registers: TRegs;
+    
+begin
+    FillChar (OriginalPath,     SizeOf (OriginalPath)   , chr(32));
+    FillChar (szOriginalPath,   SizeOf (szOriginalPath) , chr(32));
+>>>>>>> origin/main
 
     with Registers do
     begin
@@ -41,7 +51,11 @@ begin
     end;
     MSXBDOS (Registers);
 
+<<<<<<< HEAD
 	DriveLetter := chr(Registers.A + 65);
+=======
+    DriveLetter := chr(Registers.A + 65);
+>>>>>>> origin/main
 
     with Registers do
     begin
@@ -52,6 +66,7 @@ begin
     MSXBDOS (Registers);
 
     i := 0;
+<<<<<<< HEAD
     while 	(chr(szOriginalPath[i]) <> chr(0)) 	AND
 			(chr(szOriginalPath[i]) <> chr(32)) do
 	begin
@@ -64,6 +79,20 @@ begin
 	Insert (DriveLetter + chr(58) + chr(92), OriginalPath, 1);
 
 	GetCurrentDirectory := OriginalPath;
+=======
+    while   (chr(szOriginalPath[i]) <> chr(0))  AND
+            (chr(szOriginalPath[i]) <> chr(32)) do
+    begin
+        OriginalPath[i + 1] := chr(szOriginalPath[i]);
+        i := i + 1;
+    end;
+
+    OriginalPath[i] := chr(szOriginalPath[i - 1]);
+
+    Insert (DriveLetter + chr(58) + chr(92), OriginalPath, 1);
+
+    GetCurrentDirectory := OriginalPath;
+>>>>>>> origin/main
 end;
 
 (*
@@ -72,6 +101,7 @@ end;
  
 function ChangeDirectory(Path: TString): Byte;
 var
+<<<<<<< HEAD
 	Parameters: String[ctMaxPath];
 	DriveLetter, i: Byte;
 	Registers: TRegs;
@@ -101,6 +131,37 @@ begin
 	MSXBDOS (Registers);	
 	
 	ChangeDirectory := Registers.A;
+=======
+    Parameters: String[ctMaxPath];
+    DriveLetter, i: Byte;
+    Registers: TRegs;
+    
+begin
+    DriveLetter := (ord( Copy (Path, 1, 1) ) - 65);
+    
+    with Registers do
+    begin
+        C := ctSetDrive;
+        E := DriveLetter;
+    end;
+    
+    MSXBDOS (Registers);
+    
+    FillChar(Parameters,    ctMaxPath, chr(32));
+    
+    for i := 1 to Length(Path) do
+        Parameters[i - 1] := Path[i];
+    Parameters[i] := #0;    
+    
+    with Registers do
+    begin
+        C := ctChangeCurrentDir;
+        DE := addr (Parameters);
+    end;
+    MSXBDOS (Registers);    
+    
+    ChangeDirectory := Registers.A;
+>>>>>>> origin/main
 end;
 
 (*
@@ -109,6 +170,7 @@ end;
 
 function GetPathFromEnvironmentVariable (EnvironmentVariable: TString): TFileName;
 var
+<<<<<<< HEAD
 	Parameters, Path: String[ctMaxPath];
 	DriveLetter: Char;
 	i: Integer;
@@ -121,6 +183,20 @@ begin
 	for i := 1 to Length(EnvironmentVariable) do
 		Parameters[i - 1] := EnvironmentVariable[i];
 	Parameters[i] := #0;
+=======
+    Parameters, Path: String[ctMaxPath];
+    DriveLetter: Char;
+    i: Integer;
+    Registers: TRegs;
+    
+begin
+    FillChar(Path,          ctMaxPath, chr(32));
+    FillChar(Parameters,    ctMaxPath, chr(32));
+    
+    for i := 1 to Length(EnvironmentVariable) do
+        Parameters[i - 1] := EnvironmentVariable[i];
+    Parameters[i] := #0;
+>>>>>>> origin/main
     
     Path[0] := #0;
 

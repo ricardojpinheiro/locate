@@ -26,9 +26,15 @@ Const                  ctMaxPath         = 127; { Maximum path size - MSXDOS2 }
 (**
   * New types definitions
   *)
+<<<<<<< HEAD
 Type 	TTinyString		=	String[40]; 			{ String 40 byte size }
 		TString        = 	String[255];            { String 255 byte size }
 		TFileName      = 	String[ctMaxPath];      { File name path type }
+=======
+Type    TTinyString     =   String[40];             { String 40 byte size }
+        TString        =    String[255];            { String 255 byte size }
+        TFileName      =    String[ctMaxPath];      { File name path type }
+>>>>>>> origin/main
 
 (**
   * Z80 registers struct/union definition
